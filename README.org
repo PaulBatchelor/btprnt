@@ -26,10 +26,25 @@ header file.
 
 The sample program is a good place to start for seeing how
 to use btprnt. It prints some text in a textbox, and writes
-the file to a
-[[https://en.wikipedia.org/wiki/Netpbm_format#PBM_example][PBM file]].
+a [[https://en.wikipedia.org/wiki/Netpbm_format#PBM_example][PBM file]]
+called "out.pbm". Some image viewers like =feh= or
+imagemagicks =display= can view this file format natively.
 
 For fonts, btprnt reads from a bitmap tileset, encoded in
 the [[https://en.wikipedia.org/wiki/X_BitMap][XBM file format]].
 The XBM file format has the advantage of being C code, so
 it can be baked into a btprnt program with no modification.
+* Documentation
+Why not look at the [[./btprnt.org][source itself]]?
+It was written in a literate style so that other humans
+could read and understand it. If you open it in emacs,
+it can be read like an [[https://orgmode.org][org-mode]]
+document.
+
+A good place to start would be the section called
+"The Top Level Interface", which describes the main
+user-facing interface. From there, I would read the
+following abstractions in bottoms-up order: buffer, region,
+canvas. This is most of how btprnt works at the core. The
+rest of btprnt are drawing routines built on top of that.
+At the time of writing, all this amounts to is textboxes.
