@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
     btprnt_draw_textbox(&r, font, 0, 0, 8, 8, MESSAGE);
 
-    btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
+    btprnt_buf_xbm(btprnt_buf_get(bp), "grow_old", "out.xbm");
 
     btprnt_del(&bp);
     btprnt_buf_free(&font);

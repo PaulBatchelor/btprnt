@@ -363,6 +363,51 @@ void btprnt_buf_pbm(btprnt_buf *buf, const char *filename)
     fclose(fp);
 }
 #+END_SRC
+
+The buffer can also be written to an XBM file using
+the function =btprnt_buf_xbm=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_buf_xbm(btprnt_buf *buf,
+                    const char *name,
+                    const char *filename);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_buf_xbm(btprnt_buf *buf,
+                    const char *name,
+                    const char *filename)
+{
+    FILE *fp;
+    int n;
+    unsigned int count;
+
+    fp = fopen(filename, "w");
+
+    if (buf == NULL || fp == NULL) return;
+
+    fprintf(fp, "#define %s_width %d\n", name, buf->w);
+    fprintf(fp, "#define %s_height %d\n", name, buf->h);
+    fprintf(fp, "static unsigned char %s_bits[] = {\n", name);
+
+    count = buf->h * buf->stride;
+
+    for (n = 0; n < count; n++) {
+        fprintf(fp, "0x%x,", buf->data[n]);
+        if ((n + 1) % 8 == 0) {
+            fprintf(fp, "\n");
+        } else {
+            fprintf(fp, " ");
+        }
+    }
+
+    fprintf(fp, "};");
+
+
+    fclose(fp);
+}
+#+END_SRC
 * The Region
 Regions are rectangular spaces to draw stuff into.
 
