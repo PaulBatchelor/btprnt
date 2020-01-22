@@ -1,0 +1,912 @@
+#+TITLE: btprnt
+A small library for drawing bitmap images.
+* Files
+btprnt writes itself to a single header file called
+=btprnt.h=. Defining =BTPRNT_IMPL= will define the
+functions, otherwise it is just function declarations.
+
+#+NAME: btprnt.h
+#+BEGIN_SRC c :tangle btprnt.h
+#ifndef BTPRNT_H
+#define BTPRNT_H
+<<typedefs>>
+<<btprnt_region_struct>>
+<<funcdefs>>
+#ifdef BTPRNT_IMPL
+<<structs>>
+<<funcs>>
+#endif
+#endif
+#+END_SRC
+* The Top Level Interface
+The =btprnt= interface is one that handles all the low-level
+details.
+
+#+NAME: typedefs
+#+BEGIN_SRC c
+typedef struct btprnt btprnt;
+#+END_SRC
+
+The btprnt struct contains a canvas, and a buffer.
+
+#+NAME: structs
+#+BEGIN_SRC c
+struct btprnt {
+    btprnt_buf *buf;
+    btprnt_canvas *canvas;
+};
+#+END_SRC
+
+Canvas can be retrieved using the function
+=btprnt_canvas_get=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+btprnt_canvas *btprnt_canvas_get(btprnt *b);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+btprnt_canvas *btprnt_canvas_get(btprnt *b)
+{
+    return b->canvas;
+}
+#+END_SRC
+
+The buffer can be retrieved using =btprnt_buf_get=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+btprnt_buf * btprnt_buf_get(btprnt *b);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+btprnt_buf * btprnt_buf_get(btprnt *b)
+{
+    return b->buf;
+}
+#+END_SRC
+
+The function =btprnt_new= will allocate and return a new
+btprnt instance. Internally, this will allocate and
+initialize the canvas and the buffer. The dimensions of
+the buffer are needed to be known at init time.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+btprnt * btprnt_new(int w, int h);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+btprnt * btprnt_new(int w, int h)
+{
+    btprnt *b;
+
+    b = calloc(1, sizeof(btprnt));
+
+    if (b == NULL) return NULL;
+
+    b->buf = btprnt_buf_init(w, h);
+
+    if (b->buf == NULL) {
+        free(b);
+        return NULL;
+    }
+
+    b->canvas = btprnt_canvas_new(b->buf);
+
+    if (b->canvas == NULL) {
+        btprnt_buf_free(&b->buf);
+        free(b);
+        return NULL;
+    }
+    return b;
+}
+#+END_SRC
+
+The function =btprnt_del= will delete that which has
+been previously allocated.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_del(btprnt **b);
+#+END_SRC
+
+This pointer notation is a bit too clever for my peabrain,
+but it is very convenient. I will explain it while it is
+still fresh in my head:
+
+=b= is a pointer to a pointer to =btprnt= (aka double star)
+
+=*b= will return the pointer to =btprnt=. We need this
+to access things like =canvas= with =(*b)->canvas=.
+
+The freeing functions take pointers to pointers (double
+stars), so we need to give it the address of the pointer
+=&(*b)->canvas=, NOT the pointer itself which would be
+=(*b)->canvas=.
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_del(btprnt **b)
+{
+    if (*b == NULL) return;
+    btprnt_canvas_del(&(*b)->canvas);
+    btprnt_buf_free(&(*b)->buf);
+    free(*b);
+    *b = NULL;
+}
+#+END_SRC
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_del(btprnt **b);
+#+END_SRC
+
+* The Buffer
+The lowest level data construct is a buffer. This is where
+bits are written to.
+
+#+NAME: typedefs
+#+BEGIN_SRC c
+typedef struct btprnt_buf btprnt_buf;
+#+END_SRC
+
+A bitmap has an array where it stores data, and integers
+storing the width and a height.
+
+#+NAME: structs
+#+BEGIN_SRC c
+struct btprnt_buf {
+    int w;
+    int h;
+    int stride;
+    unsigned char free;
+    unsigned char *data;
+};
+#+END_SRC
+
+The buffer is allocated + initialized with the function
+=btprnt_buf_init=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+btprnt_buf * btprnt_buf_init(int w, int h);
+#+END_SRC
+
+To make the math a bit easier, the rows will be rounded to
+the nearest multiple of 8.
+
+#+NAME: funcs
+#+BEGIN_SRC c
+btprnt_buf * btprnt_buf_init(int w, int h)
+{
+    btprnt_buf *b;
+    int stride;
+
+    b = calloc(1, sizeof(btprnt_buf));
+
+    if (b == NULL) return NULL;
+
+    b->free = 1;
+    b->w = w;
+    b->h = h;
+
+    if (w % 8) {
+        stride = ((w / 8) + 1) * 8;
+    } else {
+        stride = w / 8;
+    }
+
+    b->stride = stride;
+    b->data = calloc(1, stride * h);
+
+    if (b->data == NULL) {
+        free(b);
+        return NULL;
+    }
+
+    return b;
+}
+#+END_SRC
+
+Buffers that use externally managed memory blocks can be
+created with =btprnt_buf_extmem=
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+btprnt_buf * btprnt_buf_extmem(int w, int h,
+                               unsigned char *data);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+btprnt_buf * btprnt_buf_extmem(int w, int h,
+                               unsigned char *data)
+{
+    btprnt_buf *b;
+    int stride;
+
+    b = calloc(1, sizeof(btprnt_buf));
+
+    if (b == NULL) return NULL;
+
+    b->free = 0;
+    b->w = w;
+    b->h = h;
+
+    if (w % 8) {
+        stride = ((w / 8) + 1) * 8;
+    } else {
+        stride = w / 8;
+    }
+
+    b->stride = stride;
+    b->data = data;
+
+    return b;
+}
+#+END_SRC
+
+The buffer is freed with =btprnt_buf_free=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_buf_free(btprnt_buf **buf);
+#+END_SRC
+The data and the struct must be freed. To prevent
+double-free corruptions, the pointer is set to be NULL.
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_buf_free(btprnt_buf **buf)
+{
+    if (*buf == NULL) return;
+    if ((*buf)->free) free((*buf)->data);
+    free(*buf);
+    *buf = NULL;
+}
+#+END_SRC
+
+
+The main operations are read + write with =btprnt_buf_read=
+and =btprnt_buf_write=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+unsigned char btprnt_buf_read(btprnt_buf *b, int x, int y);
+void btprnt_buf_write(btprnt_buf *b, int x, int y, int c);
+#+END_SRC
+Reading bit is a matter of first finding the byte where it
+is located, and then ANDing with the local bit location.
+
+Multiplying the stride by the height gives us which to look
+at. Adding x divided by 8 (bits to a byte), gives us the
+byte offset.
+
+No coordinate checks done here so be careful. This isn't
+an interface to be accessed directly. Sanitized inputs are
+expected to be here.
+#+NAME: funcs
+#+BEGIN_SRC c
+unsigned char btprnt_buf_read(btprnt_buf *b, int x, int y)
+{
+    unsigned char bitpos;
+    int pos;
+    int off;
+
+    off = x >> 3;
+    pos = (y * b->stride) + off;
+    bitpos = x - (off * 8);
+
+    return (b->data[pos] & (1 << bitpos)) > 0;
+}
+#+END_SRC
+
+Similar process with reading, except the buffer is toggled
+on or off depending on the value of =c=.
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_buf_write(btprnt_buf *b, int x, int y, int c)
+{
+    unsigned char bitpos;
+    int pos;
+    int off;
+
+    off = x >> 3;
+    pos = (y * b->stride) + off;
+    bitpos = x - (off * 8);
+
+    if (c) {
+        b->data[pos] |= (1 << bitpos);
+    } else {
+        b->data[pos] &= ~(1 << bitpos);
+    }
+}
+#+END_SRC
+
+A buffer can be written to a pbm file with the function
+=btprnt_buf_write=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_buf_pbm(btprnt_buf *buf, const char *filename);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_buf_pbm(btprnt_buf *buf, const char *filename)
+{
+    FILE *fp;
+    int x, y;
+    int count;
+    fp = fopen(filename, "w");
+
+    if (buf == NULL || fp == NULL) return;
+
+    fprintf(fp, "P1\n");
+    fprintf(fp, "# Generated with btprnt\n");
+    fprintf(fp, "%d %d\n", buf->w, buf->h);
+
+    count = 0;
+    for(y = 0; y < buf->h; y++) {
+        for(x = 0; x < buf->w; x++) {
+            fprintf(fp, "%d", btprnt_buf_read(buf, x, y));
+            count++;
+            if (count == 16) {
+                count = 0;
+                fprintf(fp, "\n");
+            } else if (count != 0) {
+                fprintf(fp, " ");
+            }
+        }
+    }
+
+    fclose(fp);
+}
+#+END_SRC
+* The Region
+Regions are rectangular spaces to draw stuff into.
+
+#+NAME: typedefs
+#+BEGIN_SRC c
+typedef struct btprnt_region btprnt_region;
+#+END_SRC
+
+A region provides two main things: a local coordinate
+space, and rectangular clipping.
+
+A region contains the top left coordinate position,
+the region width, and the region height.
+
+Because of how important regions for user level
+operations, this struct is actually exposed in
+the public header, allowing for instances to be allocated
+on the stack instead of the heap.
+
+#+NAME: btprnt_region_struct
+#+BEGIN_SRC c
+struct btprnt_region {
+    btprnt_canvas *c;
+    int w, h;
+    int x, y;
+};
+#+END_SRC
+
+A new region is created with =btprnt_region_new=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+btprnt_region * btprnt_region_new(btprnt_canvas *c,
+                                  int x, int y,
+                                  int w, int h);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+btprnt_region * btprnt_region_new(btprnt_canvas *c,
+                                  int x, int y,
+                                  int w, int h)
+{
+    btprnt_region *r;
+
+    r = calloc(1, sizeof(btprnt_region));
+
+    if (r == NULL) return NULL;
+
+    btprnt_region_init(c, r, x, y, w, h);
+
+    return r;
+}
+#+END_SRC
+
+It is freed with =btprnt_region_del=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_region_del(btprnt_region **r);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_region_del(btprnt_region **r)
+{
+    if (*r == NULL) return;
+    free(*r);
+    *r = NULL;
+}
+#+END_SRC
+
+If a region is to be allocated on the stack, it needs
+only to be initialized. This can be done with
+=btprnt_region_init=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_region_init(btprnt_canvas *c,
+                        btprnt_region *r,
+                        int x, int y,
+                        int w, int h);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_region_init(btprnt_canvas *c,
+                        btprnt_region *r,
+                        int x, int y,
+                        int w, int h)
+{
+    btprnt_region_xpos_set(r, x);
+    btprnt_region_ypos_set(r, y);
+    btprnt_region_width_set(r, w);
+    btprnt_region_height_set(r, h);
+    r->c = c;
+}
+#+END_SRC
+
+The dimensions and position can be changed after it is
+instantiated.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_region_xpos_set(btprnt_region *r, int x);
+void btprnt_region_ypos_set(btprnt_region *r, int y);
+void btprnt_region_width_set(btprnt_region *r, int w);
+void btprnt_region_height_set(btprnt_region *r, int h);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_region_xpos_set(btprnt_region *r, int x)
+{
+    r->x = x;
+}
+
+void btprnt_region_ypos_set(btprnt_region *r, int y)
+{
+    r->y = y;
+}
+
+void btprnt_region_width_set(btprnt_region *r, int w)
+{
+    r->w = w;
+}
+
+void btprnt_region_height_set(btprnt_region *r, int h)
+{
+    r->h = h;
+}
+#+END_SRC
+
+Drawing utilities write to a region. The region ensures that
+the pixel is not being written beyond the bounds of itself.
+The actual placement on the buffer is handled via a canvas.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_region_draw(btprnt_region *r,
+                        int x, int y,
+                        int c);
+#+END_SRC
+For now, this function will be a little bit overpowered. In
+the future, it might be better to break this up into
+different components and flesh out the canvas interface.
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_region_draw(btprnt_region *r,
+                        int x, int y,
+                        int c)
+{
+    btprnt_canvas *cv;
+    int gx, gy;
+
+    cv = r->c;
+
+    if (x < 0 || x >= r->w) return;
+    if (y < 0 || y >= r->h) return;
+
+    gx = cv->offx + r->x + x;
+    if (gx < 0 || gx >= cv->buf->w) return;
+    gy = cv->offy + r->y + y;
+    if (gy < 0 || gy >= cv->buf->h) return;
+
+    btprnt_buf_write(cv->buf, gx, gy, c);
+}
+#+END_SRC
+* The Canvas
+The canvas is an abstraction of the bitmap buffer. Regions
+get drawn to the buffer via a canvas.
+
+#+NAME: typedefs
+#+BEGIN_SRC c
+typedef struct btprnt_canvas btprnt_canvas;
+#+END_SRC
+
+It can be created with =btprnt_canvas_new=, and freed with
+=btprnt_canvas_del=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+btprnt_canvas * btprnt_canvas_new(btprnt_buf *buf);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+btprnt_canvas * btprnt_canvas_new(btprnt_buf *buf)
+{
+    btprnt_canvas *c;
+
+    c = calloc(1, sizeof(btprnt_canvas));
+
+    if (c == NULL) return NULL;
+
+    c->buf = buf;
+    btprnt_canvas_offx_set(c, 0);
+    btprnt_canvas_offy_set(c, 0);
+    return c;
+}
+#+END_SRC
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_canvas_offx_set(btprnt_canvas *c, int x);
+void btprnt_canvas_offy_set(btprnt_canvas *c, int y);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_canvas_offx_set(btprnt_canvas *c, int x)
+{
+    c->offx = x;
+}
+
+void btprnt_canvas_offy_set(btprnt_canvas *c, int y)
+{
+    c->offy = y;
+}
+#+END_SRC
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_canvas_del(btprnt_canvas **c);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_canvas_del(btprnt_canvas **c)
+{
+    if (*c == NULL) return;
+    free(*c);
+    *c = NULL;
+}
+#+END_SRC
+
+The main point of canvas abstraction is to provide an
+infinite for regions to lie on. Any pixels out of range of
+the buffer will be clipped by the canvas. Regions can be
+resized and moved around without having to worry about
+accessing bad memory.
+
+#+NAME: structs
+#+BEGIN_SRC c
+struct btprnt_canvas {
+    btprnt_buf *buf;
+    int offx, offy;
+};
+#+END_SRC
+
+The canvas has a global offset value. A canvas can be moved
+around to make regions or less visible.
+* Text
+Text is next most important thing after all the
+fundamentals. This can be broken up into levels.
+** Level 1: Drawing tiles from a map
+The lowest layer involves drawing a single tile
+from a tile map stored in memory.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_tile(btprnt_region *reg,
+                      btprnt_buf *map,
+                      int xpos, int ypos,
+                      int mx, int my,
+                      int w, int h);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_tile(btprnt_region *reg,
+                      btprnt_buf *map,
+                      int xpos, int ypos,
+                      int mx, int my,
+                      int w, int h)
+{
+    int startx;
+    int starty;
+    int x;
+    int y;
+    int c;
+
+    startx = mx * w;
+    starty = my * h;
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            c = btprnt_buf_read(map,
+                                startx + x,
+                                starty + y);
+            if (c) {
+                btprnt_region_draw(reg,
+                                   xpos + x, ypos + y,
+                                   c);
+            }
+        }
+    }
+}
+#+END_SRC
+** Level 2: Drawing a character
+To draw the right tile, we need to be be able to match
+an ASCII character to the position on the map. Right now,
+the layout for the map matches that of many of the C64
+tileset dumps found online. More details on that later.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_char(btprnt_region *reg,
+                      btprnt_buf *map,
+                      int xpos, int ypos,
+                      int w, int h,
+                      char c);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_char(btprnt_region *reg,
+                      btprnt_buf *map,
+                      int xpos, int ypos,
+                      int w, int h,
+                      char c)
+{
+    int gx, gy;
+    char o;
+
+    o = c - ' '; /* start at 0 */
+
+    gx = o % (map->stride);
+    gy = o / (map->stride);
+
+    btprnt_draw_tile(reg, map, xpos, ypos, gx, gy, w, h);
+}
+#+END_SRC
+** Level 3: Drawing a string
+From there, a string characters can be drawn onto a
+region.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_text(btprnt_region *reg,
+                      btprnt_buf *map,
+                      int xpos, int ypos,
+                      int w, int h,
+                      const char *str);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_text(btprnt_region *reg,
+                      btprnt_buf *map,
+                      int xpos, int ypos,
+                      int w, int h,
+                      const char *str)
+{
+    int len;
+    int n;
+    len = strlen(str);
+
+    for (n = 0; n < len; n++) {
+        btprnt_draw_char(reg, map,
+                         xpos + w*n, ypos,
+                         w, h,
+                         str[n]);
+    }
+}
+#+END_SRC
+** Level 4: Text wrapping
+Since the dimensions of the textbox are known, some basic
+text wrapping can be implemented.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_wraptext(btprnt_region *reg,
+                          btprnt_buf *map,
+                          int xpos, int ypos,
+                          int w, int h,
+                          const char *str);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_wraptext(btprnt_region *reg,
+                          btprnt_buf *map,
+                          int xpos, int ypos,
+                          int w, int h,
+                          const char *str)
+{
+    int len;
+    int n;
+    int curpos;
+    int line;
+    int c;
+    len = strlen(str);
+    line = 0;
+    curpos = 0;
+    c = 0;
+
+    for (n = 0; n < len; n++) {
+        curpos = xpos + w*c;
+        if (curpos > reg->w) {
+            curpos = xpos;
+            line++;
+            c = 0;
+        }
+        btprnt_draw_char(reg, map,
+                         curpos, ypos + line*h,
+                         w, h,
+                         str[n]);
+        c++;
+    }
+}
+#+END_SRC
+** Level 5: Word Wrapping
+With a bit more sophistication, some basic word wrapping can
+done by writing the text chunks between spaces. If a word is
+larger than what it left, it will know to go to the next
+line. If the word is larger than how many characters there
+are on a line, it will do the best it can to break to
+wrap the text up.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_textbox(btprnt_region *reg,
+                         btprnt_buf *map,
+                         int xpos, int ypos,
+                         int w, int h,
+                         const char *str);
+#+END_SRC
+
+This function works by counting characters until it reaches
+a space. Once it finds that space, it will write that chunk
+of letters up to (and including) that space. Some arithmetic
+will done. If it happens that the number of characters
+exceeds the bounds of the current line position, it will
+start a new line. (Space needs to be included with this
+count so there aren't any trailing spaces at the end of a
+line.) If it happens that the number of characters is
+greater than the length of the line, it won't matter
+if a newline happens, and the word will be split up as
+best as it can.
+
+When the text has reached the end, it has to print out
+the last word, if there is any. This process is pretty
+much indentical to what happens in the for loop, except
+that some of the variables updated don't matter.
+
+For now, I literally copy-pasted this twice because I'm
+tired and lazy. I may come back at some point and do
+something more elegant when I have the time.
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_textbox(btprnt_region *reg,
+                         btprnt_buf *map,
+                         int xpos, int ypos,
+                         int w, int h,
+                         const char *str)
+{
+    int len;
+    int n;
+    int start;
+    int nchars;
+    int c;
+    int line;
+    len = strlen(str);
+
+    start = 0;
+    nchars = 0;
+    c = 0;
+    line = 0;
+    for (n = 0; n < len; n++) {
+        nchars++;
+        if (str[n] == ' ' || str[n] == '\n') {
+            int wordlen;
+            int off;
+            int i;
+            int curpos;
+            char x;
+
+            wordlen = nchars * w;
+            off = xpos + c*w;
+
+            if ((off + wordlen) > reg->w) {
+                line++;
+                c = 0;
+            }
+
+            for (i = 0; i < nchars; i++) {
+                curpos = xpos + c*w;
+
+                x = str[start + i];
+
+                if (curpos > reg->w || x == '\n') {
+                    curpos = xpos;
+                    line++;
+                    c = 0;
+                }
+
+
+                if (x != '\n') {
+                    btprnt_draw_char(reg, map,
+                                    curpos, ypos + line*h,
+                                    w, h,
+                                    x);
+                    c++;
+                }
+            }
+
+            start = n + 1;
+            nchars = 0;
+        }
+    }
+
+    if (nchars > 0) {
+        /* duplicate code alert ring ring ring */
+        int wordlen;
+        int off;
+        int i;
+        int curpos;
+
+        wordlen = nchars * w;
+        off = xpos + c*w;
+
+        if ((off + wordlen) > reg->w) {
+            line++;
+            c = 0;
+        }
+
+        for (i = 0; i < nchars; i++) {
+            curpos = xpos + c*w;
+
+            if (curpos > reg->w) {
+                curpos = xpos;
+                line++;
+                c = 0;
+            }
+            btprnt_draw_char(reg, map,
+                                curpos, ypos + line*h,
+                                w, h,
+                                str[start + i]);
+            c++;
+        }
+
+        start = n + 1;
+        nchars = 0;
+    }
+}
+#+END_SRC
