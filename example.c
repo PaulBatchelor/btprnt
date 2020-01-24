@@ -41,18 +41,20 @@ int main(int argc, char *argv[])
                        &r, 10, 10,
                        180, 180);
 
+    btprnt_fill(&r, 1);
+
     btprnt_draw_textbox(&r, font,
                         0, 0,
                         8, 8,
-                        "Ars Brevis", 2);
+                        "Ars Brevis", 2, 0);
 
     btprnt_draw_textbox(&r, font,
                         0, 16,
-                        8, 8, "\nby Piet Hein", 1);
+                        8, 8, "\nby Piet Hein", 1, 0);
 
     btprnt_draw_textbox(&r, font,
                         0, 8*5,
-                        8, 8, MESSAGE, 1);
+                        8, 8, MESSAGE, 1, 0);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 

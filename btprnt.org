@@ -673,7 +673,7 @@ void btprnt_draw_tile(btprnt_region *reg,
                       int xpos, int ypos,
                       int mx, int my,
                       int w, int h,
-                      int scale);
+                      int scale, int color);
 #+END_SRC
 
 #+NAME: funcs
@@ -683,7 +683,7 @@ void btprnt_draw_tile(btprnt_region *reg,
                       int xpos, int ypos,
                       int mx, int my,
                       int w, int h,
-                      int scale)
+                      int scale, int color)
 {
     int startx;
     int starty;
@@ -703,7 +703,7 @@ void btprnt_draw_tile(btprnt_region *reg,
                 if (scale == 1) {
                     btprnt_region_draw(reg,
                                        xpos + x, ypos + y,
-                                       c);
+                                       color);
                 } else {
                     int sx, sy;
                     for (sy = 0; sy < scale; sy++) {
@@ -711,7 +711,7 @@ void btprnt_draw_tile(btprnt_region *reg,
                             btprnt_region_draw(reg,
                                                xpos + x*scale + sx,
                                                ypos + y*scale + sy,
-                                               c);
+                                               color);
                         }
                     }
                 }
@@ -732,7 +732,7 @@ void btprnt_draw_char(btprnt_region *reg,
                       btprnt_buf *map,
                       int xpos, int ypos,
                       int w, int h,
-                      char c, int scale);
+                      char c, int scale, int color);
 #+END_SRC
 
 #+NAME: funcs
@@ -741,7 +741,7 @@ void btprnt_draw_char(btprnt_region *reg,
                       btprnt_buf *map,
                       int xpos, int ypos,
                       int w, int h,
-                      char c, int scale)
+                      char c, int scale, int color)
 {
     int gx, gy;
     char o;
@@ -755,7 +755,7 @@ void btprnt_draw_char(btprnt_region *reg,
                      xpos, ypos,
                      gx, gy,
                      w, h,
-                     scale);
+                     scale, color);
 }
 #+END_SRC
 ** Level 3: Drawing a string
@@ -787,7 +787,7 @@ void btprnt_draw_text(btprnt_region *reg,
         btprnt_draw_char(reg, map,
                          xpos + w*n, ypos,
                          w, h,
-                         str[n], 1);
+                         str[n], 1, 1);
     }
 }
 #+END_SRC
@@ -832,7 +832,7 @@ void btprnt_draw_wraptext(btprnt_region *reg,
         btprnt_draw_char(reg, map,
                          curpos, ypos + line*h,
                          w, h,
-                         str[n], 1);
+                         str[n], 1, 1);
         c++;
     }
 }
@@ -851,7 +851,9 @@ void btprnt_draw_textbox(btprnt_region *reg,
                          btprnt_buf *map,
                          int xpos, int ypos,
                          int w, int h,
-                         const char *str, int scale);
+                         const char *str,
+                         int scale,
+                         int color);
 #+END_SRC
 
 This function works by counting characters until it reaches
@@ -881,7 +883,9 @@ void btprnt_draw_textbox(btprnt_region *reg,
                          btprnt_buf *map,
                          int xpos, int ypos,
                          int w, int h,
-                         const char *str, int scale)
+                         const char *str,
+                         int scale,
+                         int color)
 {
     int len;
     int n;
@@ -928,7 +932,7 @@ void btprnt_draw_textbox(btprnt_region *reg,
                     btprnt_draw_char(reg, map,
                                      curpos,
                                      ypos + line*h*scale,
-                                     w, h, x, scale);
+                                     w, h, x, scale, color);
                     c++;
                 }
             }
@@ -963,14 +967,32 @@ void btprnt_draw_textbox(btprnt_region *reg,
             }
 
             btprnt_draw_char(reg, map,
-                                curpos, ypos + line*h*scale,
-                                w, h,
-                                str[start + i], scale);
+                             curpos, ypos + line*h*scale,
+                             w, h,
+                             str[start + i], scale, color);
             c++;
         }
 
         start = n + 1;
         nchars = 0;
+    }
+}
+#+END_SRC
+* Fill
+The function =btprnt_fill= will fill a region.
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_fill(btprnt_region *reg, int clr);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_fill(btprnt_region *reg, int clr)
+{
+    int x, y;
+    for (y = 0; y < reg->h; y++) {
+        for (x = 0; x < reg->w; x++) {
+            btprnt_region_draw(reg, x, y, clr);
+        }
     }
 }
 #+END_SRC
