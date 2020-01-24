@@ -6,8 +6,14 @@
 #include "font.xbm"
 
 #define MESSAGE \
-    "i am of the nature to grow old.\n\n" \
-    "there is no way to escape growing old."
+    "There is\n" \
+    "one art,\n" \
+    "no more,\n" \
+    "no less,\n" \
+    "to do\n" \
+    "all things\n" \
+    "with art-\n" \
+    "lessness." \
 
 static btprnt_buf * setup_font(void)
 {
@@ -35,7 +41,18 @@ int main(int argc, char *argv[])
                        &r, 10, 10,
                        180, 180);
 
-    btprnt_draw_textbox(&r, font, 0, 0, 8, 8, MESSAGE, 4);
+    btprnt_draw_textbox(&r, font,
+                        0, 0,
+                        8, 8,
+                        "Ars Brevis", 2);
+
+    btprnt_draw_textbox(&r, font,
+                        0, 16,
+                        8, 8, "\nby Piet Hein", 1);
+
+    btprnt_draw_textbox(&r, font,
+                        0, 8*5,
+                        8, 8, MESSAGE, 1);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 
