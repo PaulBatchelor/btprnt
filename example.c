@@ -32,14 +32,12 @@ int main(int argc, char *argv[])
     font = setup_font();
 
     btprnt_region_init(btprnt_canvas_get(bp),
-                       &r,
-                       (200 - 112) / 2,
-                       (200 - (8 * 8))/2,
-                       112, 112);
+                       &r, 10, 10,
+                       180, 180);
 
-    btprnt_draw_textbox(&r, font, 0, 0, 8, 8, MESSAGE);
+    btprnt_draw_textbox(&r, font, 0, 0, 8, 8, MESSAGE, 4);
 
-    btprnt_buf_xbm(btprnt_buf_get(bp), "grow_old", "out.xbm");
+    btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 
     btprnt_del(&bp);
     btprnt_buf_free(&font);

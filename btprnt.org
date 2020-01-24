@@ -672,7 +672,8 @@ void btprnt_draw_tile(btprnt_region *reg,
                       btprnt_buf *map,
                       int xpos, int ypos,
                       int mx, int my,
-                      int w, int h);
+                      int w, int h,
+                      int scale);
 #+END_SRC
 
 #+NAME: funcs
@@ -681,7 +682,8 @@ void btprnt_draw_tile(btprnt_region *reg,
                       btprnt_buf *map,
                       int xpos, int ypos,
                       int mx, int my,
-                      int w, int h)
+                      int w, int h,
+                      int scale)
 {
     int startx;
     int starty;
@@ -698,9 +700,21 @@ void btprnt_draw_tile(btprnt_region *reg,
                                 startx + x,
                                 starty + y);
             if (c) {
-                btprnt_region_draw(reg,
-                                   xpos + x, ypos + y,
-                                   c);
+                if (scale == 1) {
+                    btprnt_region_draw(reg,
+                                       xpos + x, ypos + y,
+                                       c);
+                } else {
+                    int sx, sy;
+                    for (sy = 0; sy < scale; sy++) {
+                        for (sx = 0; sx < scale; sx++) {
+                            btprnt_region_draw(reg,
+                                               xpos + x*scale + sx,
+                                               ypos + y*scale + sy,
+                                               c);
+                        }
+                    }
+                }
             }
         }
     }
@@ -718,7 +732,7 @@ void btprnt_draw_char(btprnt_region *reg,
                       btprnt_buf *map,
                       int xpos, int ypos,
                       int w, int h,
-                      char c);
+                      char c, int scale);
 #+END_SRC
 
 #+NAME: funcs
@@ -727,7 +741,7 @@ void btprnt_draw_char(btprnt_region *reg,
                       btprnt_buf *map,
                       int xpos, int ypos,
                       int w, int h,
-                      char c)
+                      char c, int scale)
 {
     int gx, gy;
     char o;
@@ -737,7 +751,11 @@ void btprnt_draw_char(btprnt_region *reg,
     gx = o % (map->stride);
     gy = o / (map->stride);
 
-    btprnt_draw_tile(reg, map, xpos, ypos, gx, gy, w, h);
+    btprnt_draw_tile(reg, map,
+                     xpos, ypos,
+                     gx, gy,
+                     w, h,
+                     scale);
 }
 #+END_SRC
 ** Level 3: Drawing a string
@@ -769,7 +787,7 @@ void btprnt_draw_text(btprnt_region *reg,
         btprnt_draw_char(reg, map,
                          xpos + w*n, ypos,
                          w, h,
-                         str[n]);
+                         str[n], 1);
     }
 }
 #+END_SRC
@@ -814,7 +832,7 @@ void btprnt_draw_wraptext(btprnt_region *reg,
         btprnt_draw_char(reg, map,
                          curpos, ypos + line*h,
                          w, h,
-                         str[n]);
+                         str[n], 1);
         c++;
     }
 }
@@ -833,7 +851,7 @@ void btprnt_draw_textbox(btprnt_region *reg,
                          btprnt_buf *map,
                          int xpos, int ypos,
                          int w, int h,
-                         const char *str);
+                         const char *str, int scale);
 #+END_SRC
 
 This function works by counting characters until it reaches
@@ -863,7 +881,7 @@ void btprnt_draw_textbox(btprnt_region *reg,
                          btprnt_buf *map,
                          int xpos, int ypos,
                          int w, int h,
-                         const char *str)
+                         const char *str, int scale)
 {
     int len;
     int n;
@@ -886,8 +904,8 @@ void btprnt_draw_textbox(btprnt_region *reg,
             int curpos;
             char x;
 
-            wordlen = nchars * w;
-            off = xpos + c*w;
+            wordlen = nchars *w*scale;
+            off = xpos + c*w*scale;
 
             if ((off + wordlen) > reg->w) {
                 line++;
@@ -895,11 +913,11 @@ void btprnt_draw_textbox(btprnt_region *reg,
             }
 
             for (i = 0; i < nchars; i++) {
-                curpos = xpos + c*w;
+                curpos = xpos + c*w*scale;
 
                 x = str[start + i];
 
-                if (curpos > reg->w || x == '\n') {
+                if ((curpos + w*scale) > reg->w || x == '\n') {
                     curpos = xpos;
                     line++;
                     c = 0;
@@ -908,9 +926,9 @@ void btprnt_draw_textbox(btprnt_region *reg,
 
                 if (x != '\n') {
                     btprnt_draw_char(reg, map,
-                                    curpos, ypos + line*h,
-                                    w, h,
-                                    x);
+                                     curpos,
+                                     ypos + line*h*scale,
+                                     w, h, x, scale);
                     c++;
                 }
             }
@@ -927,8 +945,8 @@ void btprnt_draw_textbox(btprnt_region *reg,
         int i;
         int curpos;
 
-        wordlen = nchars * w;
-        off = xpos + c*w;
+        wordlen = nchars * w * scale;
+        off = xpos + c*w*scale;
 
         if ((off + wordlen) > reg->w) {
             line++;
@@ -936,17 +954,18 @@ void btprnt_draw_textbox(btprnt_region *reg,
         }
 
         for (i = 0; i < nchars; i++) {
-            curpos = xpos + c*w;
+            curpos = xpos + c*w*scale;
 
-            if (curpos > reg->w) {
+            if ((curpos + w*scale) > reg->w) {
                 curpos = xpos;
                 line++;
                 c = 0;
             }
+
             btprnt_draw_char(reg, map,
-                                curpos, ypos + line*h,
+                                curpos, ypos + line*h*scale,
                                 w, h,
-                                str[start + i]);
+                                str[start + i], scale);
             c++;
         }
 
