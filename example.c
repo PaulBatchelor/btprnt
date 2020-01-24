@@ -27,7 +27,9 @@ int main(int argc, char *argv[])
     btprnt *bp;
     btprnt_region r;
     btprnt_buf *font;
+    int off;
 
+    off = 6;
     bp = btprnt_new(200, 200);
 
     if (bp == NULL) {
@@ -44,16 +46,18 @@ int main(int argc, char *argv[])
     btprnt_fill(&r, 1);
 
     btprnt_draw_textbox(&r, font,
-                        0, 0,
+                        off, off,
                         8, 8,
                         "Ars Brevis", 2, 0);
 
+    btprnt_draw_rect(&r, off/2, off/2, 180 - off, 180 - off, 0);
+
     btprnt_draw_textbox(&r, font,
-                        0, 16,
+                        off, 16 + off,
                         8, 8, "\nby Piet Hein", 1, 0);
 
     btprnt_draw_textbox(&r, font,
-                        0, 8*5,
+                        off, 8*5 + off,
                         8, 8, MESSAGE, 1, 0);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");

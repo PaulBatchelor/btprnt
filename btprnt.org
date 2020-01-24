@@ -996,3 +996,74 @@ void btprnt_fill(btprnt_region *reg, int clr)
     }
 }
 #+END_SRC
+* Lines
+** Horizontal Line
+A horizontal line can be drawn with =btprnt_draw_hline=.
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_hline(btprnt_region *r,
+                       int x, int y,
+                       int sz, int clr);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_hline(btprnt_region *r,
+                       int x, int y,
+                       int sz, int clr)
+{
+    int n;
+
+    for (n = 0; n < sz; n++) {
+        btprnt_region_draw(r, x + n, y, clr);
+    }
+}
+#+END_SRC
+** Vertical Line
+A horizontal line can be drawn with =btprnt_draw_vline=.
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_vline(btprnt_region *r,
+                       int x, int y,
+                       int sz, int clr);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_vline(btprnt_region *r,
+                       int x, int y,
+                       int sz, int clr)
+{
+    int n;
+
+    for (n = 0; n < sz; n++) {
+        btprnt_region_draw(r, x, y + n, clr);
+    }
+}
+#+END_SRC
+** TODO Regular Line
+* TODO Rectangle
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_rect(btprnt_region *r,
+                      int x, int y,
+                      int w, int h,
+                      int clr);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_rect(btprnt_region *r,
+                      int x, int y,
+                      int w, int h,
+                      int clr)
+{
+    btprnt_draw_hline(r, x, y, w, clr);
+    btprnt_draw_hline(r, x, y + (h - 1), w, clr);
+    btprnt_draw_vline(r, x, y, h, clr);
+    btprnt_draw_vline(r, x + (w - 1), y, h, clr);
+}
+#+END_SRC
+* TODO Circle
+** Stroked Circle
+** Filled Circle
+* TODO Rounded Rectangle
+** Stroked Rounded Rectangle
+** Filled Rounded Rectangle
