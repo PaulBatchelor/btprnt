@@ -60,7 +60,13 @@ int main(int argc, char *argv[])
                         off, 8*5 + off,
                         8, 8, MESSAGE, 1, 0);
 
+    btprnt_draw_circ(&r,
+                     180 - 32 - 16,
+                     180 - 32 - 16,
+                     32, 0);
+
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
+
 
     btprnt_del(&bp);
     btprnt_buf_free(&font);
