@@ -65,6 +65,11 @@ int main(int argc, char *argv[])
                      180 - 32 - 16,
                      32, 0);
 
+    btprnt_draw_rect_filled(&r,
+                            32,
+                            180 - 32 - 16,
+                            32, 32, 0);
+
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 
 

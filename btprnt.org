@@ -1101,6 +1101,7 @@ void btprnt_draw_line(btprnt_region *reg,
 }
 #+END_SRC
 * TODO Rectangle
+** Stroked Rectangle
 #+NAME: funcdefs
 #+BEGIN_SRC c
 void btprnt_draw_rect(btprnt_region *r,
@@ -1119,6 +1120,33 @@ void btprnt_draw_rect(btprnt_region *r,
     btprnt_draw_hline(r, x, y + (h - 1), w, clr);
     btprnt_draw_vline(r, x, y, h, clr);
     btprnt_draw_vline(r, x + (w - 1), y, h, clr);
+}
+#+END_SRC
+** Filled Rectangle
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_rect_filled(btprnt_region *r,
+                             int xpos, int ypos,
+                             int w, int h,
+                             int clr);
+#+END_SRC
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_rect_filled(btprnt_region *r,
+                             int xpos, int ypos,
+                             int w, int h,
+                             int clr)
+{
+    int x, y;
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            btprnt_region_draw(r,
+                               xpos + x,
+                               ypos + y,
+                               clr);
+        }
+    }
 }
 #+END_SRC
 * TODO Circle
