@@ -1158,6 +1158,12 @@ but it was too pointy at the compass coordinates. This one
 is slightly more expensive, but makes for a much smoother
 circle:
 [[https://iq.opengenus.org/bresenhams-circle-drawing-algorithm/]]
+
+That ones a bit boxy, so I tried this one:
+[[https://zcsaha.github.io/computer-graphics/midpoint-circle-drawing-algorithm-in-c.html]]
+
+I'm not great either. Kind of looks like a polygon when the
+radius is 16. We're keeping it at that for now.
 #+NAME: funcdefs
 #+BEGIN_SRC c
 void btprnt_draw_circ(btprnt_region *r,
@@ -1167,6 +1173,20 @@ void btprnt_draw_circ(btprnt_region *r,
 #+END_SRC
 #+NAME: funcs
 #+BEGIN_SRC c
+static void circ_pixel(btprnt_region *r,
+                       int cx, int cy,
+                       int x, int y,
+                       int clr)
+{
+    btprnt_region_draw(r, cx - x, cy + y, clr);
+    btprnt_region_draw(r, cx + x, cy + y, clr);
+    btprnt_region_draw(r, cx - y, cy + x, clr);
+    btprnt_region_draw(r, cx + y, cy + x, clr);
+    btprnt_region_draw(r, cx + x, cy - y, clr);
+    btprnt_region_draw(r, cx - x, cy - y, clr);
+    btprnt_region_draw(r, cx + y, cy - x, clr);
+    btprnt_region_draw(r, cx - y, cy - x, clr);
+}
 void btprnt_draw_circ(btprnt_region *r,
                       int cx, int cy,
                       int rad,
@@ -1178,36 +1198,21 @@ void btprnt_draw_circ(btprnt_region *r,
 
     x = 0;
     y = rad;
-    err = 3 - 2*rad;
+    err = 1 - rad;
 
-    while (y >= x) {
+    circ_pixel(r, cx, cy, x, y, clr);
 
-        btprnt_region_draw(r, cx - x, cy + y, clr);
-        btprnt_region_draw(r, cx + x, cy + y, clr);
-        btprnt_region_draw(r, cx - y, cy + x, clr);
-        btprnt_region_draw(r, cx + y, cy + x, clr);
-        btprnt_region_draw(r, cx + x, cy - y, clr);
-        btprnt_region_draw(r, cx - x, cy - y, clr);
-        btprnt_region_draw(r, cx + y, cy - x, clr);
-        btprnt_region_draw(r, cx - y, cy - x, clr);
-
+    while (x < y) {
         x++;
-        if (err > 0) {
-            y--;
-            err += 4 * (x - y) + 10;
+
+        if (err < 0) {
+            err += 2 * x + 1;
         } else {
-            err += 4 * x + 6;
-
+            y--;
+            err += 2 * (x - y) + 1;
         }
-        /* if (err <= 0) { */
-        /*     y += 1; */
-        /*     err += 2 * y + 1; */
-        /* } */
 
-        /* if ( err > 0 ) { */
-        /*     x -= 1; */
-        /*     err -= 2 * x + 1; */
-        /* } */
+        circ_pixel(r, cx, cy, x, y, clr);
     }
 }
 #+END_SRC
