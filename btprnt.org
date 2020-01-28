@@ -1152,6 +1152,12 @@ void btprnt_draw_rect_filled(btprnt_region *r,
 * TODO Circle
 ** Stroked Circle
 Midpoint circle algorithm.
+
+I don't know where I found the code for the first algorithm,
+but it was too pointy at the compass coordinates. This one
+is slightly more expensive, but makes for a much smoother
+circle:
+[[https://iq.opengenus.org/bresenhams-circle-drawing-algorithm/]]
 #+NAME: funcdefs
 #+BEGIN_SRC c
 void btprnt_draw_circ(btprnt_region *r,
@@ -1170,11 +1176,11 @@ void btprnt_draw_circ(btprnt_region *r,
     int y;
     int err;
 
-    x = rad;
-    y = 0;
-    err = 0;
+    x = 0;
+    y = rad;
+    err = 3 - 2*rad;
 
-    while (x >= y) {
+    while (y >= x) {
 
         btprnt_region_draw(r, cx - x, cy + y, clr);
         btprnt_region_draw(r, cx + x, cy + y, clr);
@@ -1185,15 +1191,23 @@ void btprnt_draw_circ(btprnt_region *r,
         btprnt_region_draw(r, cx + y, cy - x, clr);
         btprnt_region_draw(r, cx - y, cy - x, clr);
 
-        if (err <= 0) {
-            y += 1;
-            err += 2 * y + 1;
-        }
+        x++;
+        if (err > 0) {
+            y--;
+            err += 4 * (x - y) + 10;
+        } else {
+            err += 4 * x + 6;
 
-        if ( err > 0 ) {
-            x -= 1;
-            err -= 2 * x + 1;
         }
+        /* if (err <= 0) { */
+        /*     y += 1; */
+        /*     err += 2 * y + 1; */
+        /* } */
+
+        /* if ( err > 0 ) { */
+        /*     x -= 1; */
+        /*     err -= 2 * x + 1; */
+        /* } */
     }
 }
 #+END_SRC
