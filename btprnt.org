@@ -142,7 +142,6 @@ void btprnt_del(btprnt **b)
 #+BEGIN_SRC c
 void btprnt_del(btprnt **b);
 #+END_SRC
-
 * The Buffer
 The lowest level data construct is a buffer. This is where
 bits are written to.
@@ -286,6 +285,7 @@ byte offset.
 No coordinate checks done here so be careful. This isn't
 an interface to be accessed directly. Sanitized inputs are
 expected to be here.
+
 #+NAME: funcs
 #+BEGIN_SRC c
 unsigned char btprnt_buf_read(btprnt_buf *b, int x, int y)
@@ -304,6 +304,7 @@ unsigned char btprnt_buf_read(btprnt_buf *b, int x, int y)
 
 Similar process with reading, except the buffer is toggled
 on or off depending on the value of =c=.
+
 #+NAME: funcs
 #+BEGIN_SRC c
 void btprnt_buf_write(btprnt_buf *b, int x, int y, int c)
@@ -324,8 +325,30 @@ void btprnt_buf_write(btprnt_buf *b, int x, int y, int c)
 }
 #+END_SRC
 
+Dimensions for the buffer can be retrieved using
+=btprnt_buf_width= and =btprnt_buf_height=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+int btprnt_buf_width(btprnt_buf *buf);
+int btprnt_buf_height(btprnt_buf *buf);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+int btprnt_buf_width(btprnt_buf *buf)
+{
+    return buf->w;
+}
+
+int btprnt_buf_height(btprnt_buf *buf)
+{
+    return buf->h;
+}
+#+END_SRC
+
 A buffer can be written to a pbm file with the function
-=btprnt_buf_write=.
+=btprnt_buf_pbm=.
 
 #+NAME: funcdefs
 #+BEGIN_SRC c
