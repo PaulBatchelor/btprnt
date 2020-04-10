@@ -891,6 +891,12 @@ greater than the length of the line, it won't matter
 if a newline happens, and the word will be split up as
 best as it can.
 
+To be clear: a newline *shouldn't* happen if the number
+of characters in a word is longer than the width. A weird
+edge case I ran into involved having the first word in
+the textbox be long. The original code added a empty
+line on the first line, which looked weird.
+
 When the text has reached the end, it has to print out
 the last word, if there is any. This process is pretty
 much indentical to what happens in the for loop, except
@@ -931,12 +937,15 @@ void btprnt_draw_textbox(btprnt_region *reg,
             int curpos;
             char x;
 
-            wordlen = nchars *w*scale;
+            wordlen = nchars*w*scale;
             off = xpos + c*w*scale;
 
             if ((off + wordlen) > reg->w) {
-                line++;
-                c = 0;
+                /* nested if is a clumsy, but it works */
+                if (wordlen < reg->w) {
+                    line++;
+                    c = 0;
+                }
             }
 
             for (i = 0; i < nchars; i++) {
