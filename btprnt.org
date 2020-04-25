@@ -1071,7 +1071,8 @@ void btprnt_draw_vline(btprnt_region *r,
     }
 }
 #+END_SRC
-** TODO Regular Line
+** DONE Regular Line
+CLOSED: [2020-04-25 Sat 09:43]
 Bresenham circle algorithm.
 #+NAME: funcdefs
 #+BEGIN_SRC c
@@ -1132,7 +1133,7 @@ void btprnt_draw_line(btprnt_region *reg,
     }
 }
 #+END_SRC
-* TODO Rectangle
+* Rectangle
 ** Stroked Rectangle
 #+NAME: funcdefs
 #+BEGIN_SRC c
@@ -1181,7 +1182,7 @@ void btprnt_draw_rect_filled(btprnt_region *r,
     }
 }
 #+END_SRC
-* TODO Circle
+* WIP Circle
 ** Stroked Circle
 Midpoint circle algorithm.
 
@@ -1252,3 +1253,182 @@ void btprnt_draw_circ(btprnt_region *r,
 * TODO Rounded Rectangle
 ** Stroked Rounded Rectangle
 ** Filled Rounded Rectangle
+* Triangle
+A filled triangle is ideal for arrows in flowcharts!
+
+The algorithm for this particular rasterization method
+is based off the one found [[ http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html][here]].
+
+The paramters supplied are the 3 vertices of the triangle.
+
+Note: I'm using 1-indexed variables here to better match
+the variables in the algorithm.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_triangle(btprnt_region *r,
+                          int v1x, int v1y,
+                          int v2x, int v2y,
+                          int v3x, int v3y,
+                          int c);
+#+END_SRC
+
+Before the processing begins, vertices are sorted out
+in ascending order by y, making v1 the highest point.
+
+#+NAME: sort_vertices_by_y
+#+BEGIN_SRC c
+{
+    int tmpx;
+    int tmpy;
+
+    if (v1y > v2y) {
+        tmpy = v1y;
+        tmpx = v1x;
+
+        v1y = v2y;
+        v1x = v2x;
+
+        v2y = tmpy;
+        v2x = tmpx;
+    }
+
+    if (v1y > v3y) {
+        tmpy = v1y;
+        tmpx = v1x;
+
+        v1y = v3y;
+        v1x = v3x;
+
+        v3y = tmpy;
+        v3x = tmpx;
+    }
+
+    if (v2y > v3y) {
+        tmpy = v2y;
+        tmpx = v2x;
+
+        v2y = v3y;
+        v2x = v3x;
+
+        v3y = tmpy;
+        v3x = tmpx;
+    }
+}
+#+END_SRC
+
+There are two simple cases for filling a triangle that occur
+with triangles flat at the top or bottom. In this case, it
+is just a scanline fill.
+
+#+NAME: flat_triangle_fill
+#+BEGIN_SRC c
+static void fill_bottom_flat_tri(btprnt_region *r,
+                                 int v1x, int v1y,
+                                 int v2x, int v2y,
+                                 int v3x, int v3y,
+                                 int c)
+{
+    float invslope1;
+    float invslope2;
+    float curx1;
+    float curx2;
+    int y;
+
+    invslope1 = (float)(v2x - v1x) / (v2y - v1y);
+    invslope2 = (float)(v3x - v1x) / (v3y - v1y);
+
+    curx1 = v1x;
+    curx2 = v1x;
+
+    for (y = v1y; y <= v2y; y++) {
+        btprnt_draw_line(r, curx1, y, curx2, y, c);
+        curx1 += invslope1;
+        curx2 += invslope2;
+    }
+}
+#+END_SRC
+
+#+NAME: flat_triangle_fill
+#+BEGIN_SRC c
+static void fill_top_flat_tri(btprnt_region *r,
+                              int v1x, int v1y,
+                              int v2x, int v2y,
+                              int v3x, int v3y,
+                              int c)
+{
+    float invslope1;
+    float invslope2;
+    float curx1;
+    float curx2;
+    int y;
+
+    invslope1 = (float)(v3x - v1x) / (v3y - v1y);
+    invslope2 = (float)(v3x - v2x) / (v3y - v2y);
+
+    curx1 = v3x;
+    curx2 = v3x;
+
+    for (y = v3y; y > v1y; y--) {
+        btprnt_draw_line(r, curx1, y, curx2, y, c);
+        curx1 -= invslope1;
+        curx2 -= invslope2;
+    }
+}
+#+END_SRC
+
+In the more general case, the triangle is split in half into
+two smaller triangles: one with a flat bottom, the other
+with a flat top.
+
+#+NAME: split_the_triangle
+#+BEGIN_SRC c
+int v4x, v4y;
+
+v4x = (v1x +
+    ((float)(v2y - v1y)/(v3y - v1y)) *
+    (v3x - v1x));
+v4y = v2y;
+
+fill_bottom_flat_tri(r,
+                     v1x, v1y,
+                     v2x, v2y,
+                     v4x, v4y,
+                     c);
+
+fill_top_flat_tri(r,
+                  v2x, v2y,
+                  v4x, v4y,
+                  v3x, v3y,
+                  c);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+<<flat_triangle_fill>>
+
+void btprnt_draw_triangle(btprnt_region *r,
+                          int v1x, int v1y,
+                          int v2x, int v2y,
+                          int v3x, int v3y,
+                          int c)
+{
+    <<sort_vertices_by_y>>
+    if (v2y == v3y) {
+        fill_bottom_flat_tri(r,
+                             v1x, v1y,
+                             v2x, v2y,
+                             v3x, v3y,
+                             c);
+    } if (v1y == v2y) {
+        fill_top_flat_tri(r,
+                          v1x, v1y,
+                          v2x, v2y,
+                          v3x, v3y,
+                          c);
+    } else {
+        <<split_the_triangle>>
+    }
+
+}
+#+END_SRC

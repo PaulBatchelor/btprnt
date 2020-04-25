@@ -22,6 +22,38 @@ static btprnt_buf * setup_font(void)
                              font_bits);
 }
 
+static void draw_triangle(btprnt_region *r)
+{
+    int v1x, v1y;
+    int v2x, v2y;
+    int v3x, v3y;
+
+    v1x = 3;
+    v1y = 3;
+
+    v2x = 40;
+    v2y = 21;
+
+    v3x = 10;
+    v3y = 80;
+
+    btprnt_draw_triangle(r,
+                         v1x, v1y,
+                         v2x, v2y,
+                         v3x, v3y,
+                         1);
+
+    /* ideally, fill the bounds here */
+    /* atm. there's some space and it is an ugly triangle */
+    v1x += 50;
+    v2x += 50;
+    v3x += 50;
+
+    btprnt_draw_line(r, v1x, v1y, v2x, v2y, 1);
+    btprnt_draw_line(r, v1x, v1y, v3x, v3y, 1);
+    btprnt_draw_line(r, v2x, v2y, v3x, v3y, 1);
+}
+
 int main(int argc, char *argv[])
 {
     btprnt *bp;
@@ -30,7 +62,7 @@ int main(int argc, char *argv[])
     int off;
 
     off = 6;
-    bp = btprnt_new(200, 200);
+    bp = btprnt_new(400, 200);
 
     if (bp == NULL) {
         printf("There was an issue starting btprnt\n");
@@ -69,6 +101,14 @@ int main(int argc, char *argv[])
                             32,
                             180 - 32 - 16,
                             32, 32, 0);
+
+
+    btprnt_region_init(btprnt_canvas_get(bp),
+                       &r, 210, 10,
+                       180, 180);
+
+    draw_triangle(&r);
+
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 
