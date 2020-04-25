@@ -1538,11 +1538,15 @@ void btprnt_draw_arrow(btprnt_region *r,
 
     sz = 9;
 
-    dx = abs(end_x - start_x);
-    dy = abs(end_y - start_y);
-
+    dx = end_x - start_x;
+    dy = end_y - start_y;
 
     off = asin(dx / sqrt(dx*dx + dy*dy));
+
+    if (off < 0) {
+        dir *= -1;
+    }
+
     angle = 30;
     /* convert to radians */
     angle *= M_PI / 180.0;
@@ -1550,7 +1554,6 @@ void btprnt_draw_arrow(btprnt_region *r,
     btprnt_draw_line(r,
                      start_x, start_y,
                      end_x, end_y, c);
-
     if (arrow_start) {
         ptx[0] = start_x + dir * sz * sin(angle + off);
         pty[0] = start_y + dir * sz * cos(angle + off);

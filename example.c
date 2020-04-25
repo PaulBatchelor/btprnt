@@ -69,6 +69,18 @@ static void draw_arrow(btprnt_region *r)
     endx -= 10;
     btprnt_draw_rect(r, endx, endy, 20, 20, 1);
 
+
+    startx = 100;
+    starty = 0;
+
+    endx = 100;
+    endy = 40;
+
+    btprnt_draw_rect(r, startx, starty, 20, 20, 1);
+    startx += 10;
+    starty += 20;
+
+    btprnt_draw_arrow(r, startx, starty, endx, endy, 1, 1, 1);
 }
 
 int main(int argc, char *argv[])
