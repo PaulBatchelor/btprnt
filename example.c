@@ -43,15 +43,6 @@ static void draw_triangle(btprnt_region *r)
                          v3x, v3y,
                          1);
 
-    /* ideally, fill the bounds here */
-    /* atm. there's some space and it is an ugly triangle */
-    v1x += 50;
-    v2x += 50;
-    v3x += 50;
-
-    btprnt_draw_line(r, v1x, v1y, v2x, v2y, 1);
-    btprnt_draw_line(r, v1x, v1y, v3x, v3y, 1);
-    btprnt_draw_line(r, v2x, v2y, v3x, v3y, 1);
 }
 
 int main(int argc, char *argv[])
