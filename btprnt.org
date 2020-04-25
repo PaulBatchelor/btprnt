@@ -13,6 +13,10 @@ functions, otherwise it is just function declarations.
 <<btprnt_region_struct>>
 <<funcdefs>>
 #ifdef BTPRNT_IMPL
+#include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 <<structs>>
 <<funcs>>
 #endif
@@ -1489,5 +1493,91 @@ void btprnt_draw_triangle(btprnt_region *r,
         <<split_the_triangle>>
     }
 
+}
+#+END_SRC
+* Arrow
+This draws an arrowed line. One can specify if the start and
+end points have an arrow.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_arrow(btprnt_region *r,
+                       int start_x, int start_y,
+                       int end_x, int end_y,
+                       int arrow_start,
+                       int arrow_end,
+                       int c);
+#+END_SRC
+
+Arrowheads are equalateral triangles, angled relative to the
+slope of the line.
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_arrow(btprnt_region *r,
+                       int start_x, int start_y,
+                       int end_x, int end_y,
+                       int arrow_start,
+                       int arrow_end,
+                       int c)
+{
+    int sz;
+    float angle;
+    float off;
+    int ptx[2];
+    int pty[2];
+    int dx;
+    int dy;
+    int dir;
+
+    if (start_x > end_x) {
+        dir = -1;
+    } else {
+        dir = 1;
+    }
+
+    sz = 9;
+
+    dx = abs(end_x - start_x);
+    dy = abs(end_y - start_y);
+
+
+    off = asin(dx / sqrt(dx*dx + dy*dy));
+    angle = 30;
+    /* convert to radians */
+    angle *= M_PI / 180.0;
+
+    btprnt_draw_line(r,
+                     start_x, start_y,
+                     end_x, end_y, c);
+
+    if (arrow_start) {
+        ptx[0] = start_x + dir * sz * sin(angle + off);
+        pty[0] = start_y + dir * sz * cos(angle + off);
+
+        ptx[1] = start_x + dir * sz * sin(off - angle);
+        pty[1] = start_y + dir * sz * cos(off - angle);
+
+        btprnt_draw_triangle(r,
+                            start_x, start_y,
+                            ptx[0], pty[0],
+                            ptx[1], pty[1],
+                            c);
+    }
+
+    if (arrow_end) {
+        ptx[0] = end_x + -dir * sz * sin(angle + off);
+        pty[0] = end_y + -dir * sz * cos(angle + off);
+
+        ptx[1] = end_x + -dir * sz * sin(off - angle);
+        pty[1] = end_y + -dir * sz * cos(off - angle);
+
+        btprnt_draw_triangle(r,
+                            end_x, end_y,
+                            ptx[0], pty[0],
+                            ptx[1], pty[1],
+                            c);
+
+    }
 }
 #+END_SRC

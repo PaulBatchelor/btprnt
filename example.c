@@ -45,6 +45,32 @@ static void draw_triangle(btprnt_region *r)
 
 }
 
+static void draw_arrow(btprnt_region *r)
+{
+    int startx;
+    int starty;
+    int endx;
+    int endy;
+
+
+    startx = 40;
+    starty = 40;
+
+    endx = 80;
+    endy = 60;
+
+    btprnt_draw_rect(r, startx, starty, 50, 50, 1);
+    startx += 50;
+    starty += 30;
+    endx += 50;
+    endy += 50;
+
+    btprnt_draw_arrow(r, startx, starty, endx, endy, 1, 1, 1);
+    endx -= 10;
+    btprnt_draw_rect(r, endx, endy, 20, 20, 1);
+
+}
+
 int main(int argc, char *argv[])
 {
     btprnt *bp;
@@ -100,9 +126,9 @@ int main(int argc, char *argv[])
 
     draw_triangle(&r);
 
+    draw_arrow(&r);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
-
 
     btprnt_del(&bp);
     btprnt_buf_free(&font);
