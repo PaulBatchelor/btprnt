@@ -83,6 +83,15 @@ static void draw_arrow(btprnt_region *r)
     btprnt_draw_arrow(r, startx, starty, endx, endy, 1, 1, 1);
 }
 
+static void draw_bezier(btprnt_region *r)
+{
+    btprnt_draw_bezier(r,
+                       0, 150,
+                       50, 100,
+                       100, 130,
+                       1);
+}
+
 int main(int argc, char *argv[])
 {
     btprnt *bp;
@@ -139,6 +148,8 @@ int main(int argc, char *argv[])
     draw_triangle(&r);
 
     draw_arrow(&r);
+
+    draw_bezier(&r);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 

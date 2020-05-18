@@ -1584,3 +1584,144 @@ void btprnt_draw_arrow(btprnt_region *r,
     }
 }
 #+END_SRC
+* Bezier Curve
+Adapted from the bresenham bezier found at
+[[http://members.chello.at/~easyfilter/bresenham.html][this page]], as
+well as this [[https://stackoverflow.com/questions/31757501/pixel-by-pixel-b%C3%A9zier-curve][stackoverflow post]]
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_bezier(btprnt_region *reg,
+                        int x0, int y0,
+                        int x1, int y1,
+                        int x2, int y2,
+                        int c);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+<<draw_bezier_seg>>
+void btprnt_draw_bezier(btprnt_region *reg,
+                        int x0, int y0,
+                        int x1, int y1,
+                        int x2, int y2,
+                        int c)
+{
+    int x, y;
+    double t, r;
+
+    x = x0-x1;
+    y = y0-y1;
+    t = x0-2*x1+x2;
+
+    if ((long)x*(x2-x1) > 0) {
+        if ((long)y*(y2-y1) > 0)
+            if (fabs((y0-2*y1+y2)/t*x) > abs(y)) {
+                x0 = x2; x2 = x+x1; y0 = y2; y2 = y+y1;
+            }
+        t = (x0-x1)/t;
+        r = (1-t)*((1-t)*y0+2.0*t*y1)+t*t*y2;
+        t = (x0*x2-x1*x1)*t/(x0-x1);
+        x = floor(t+0.5); y = floor(r+0.5);
+        r = (y1-y0)*(t-x0)/(x1-x0)+y0;
+        bezierseg(reg, x0, y0, x, floor(r+0.5), x, y, c);
+        r = (y1-y2)*(t-x2)/(x1-x2)+y2;
+        x0 = x1 = x; y0 = y; y1 = floor(r+0.5);
+    }
+
+    if ((long)(y0-y1)*(y2-y1) > 0) {
+        t = y0-2*y1+y2; t = (y0-y1)/t;
+        r = (1-t)*((1-t)*x0+2.0*t*x1)+t*t*x2;
+        t = (y0*y2-y1*y1)*t/(y0-y1);
+        x = floor(r+0.5); y = floor(t+0.5);
+        r = (x1-x0)*(t-y0)/(y1-y0)+x0;
+        bezierseg(reg, x0, y0, floor(r+0.5), y, x, y, c);
+        r = (x1-x2)*(t-y2)/(y1-y2)+x2;
+        x0 = x; x1 = floor(r+0.5); y0 = y1 = y;
+    }
+
+    bezierseg(reg, x0, y0, x1, y1, x2, y2, c);
+}
+#+END_SRC
+
+#+NAME: draw_bezier_seg
+#+BEGIN_SRC c
+static void bezierseg(btprnt_region *r,
+                      int x0, int y0,
+                      int x1, int y1,
+                      int x2, int y2,
+                      int c)
+{
+    int sx, sy;
+    long xx, yy, xy;
+    double dx, dy, err, cur;
+    int rc;
+
+    sx = x2-x1;
+    sy = y2-y1;
+    xx = x0-x1;
+    yy = y0-y1;
+
+    cur = xx*sy-yy*sx;
+
+    rc = xx*sx <= 0 && yy*sy <= 0;
+
+    if (!rc) return;
+
+    if (sx*(long)sx+sy*(long)sy > xx*xx+yy*yy) {
+        x2 = x0;
+        x0 = sx+x1;
+        y2 = y0;
+        y0 = sy+y1;
+        cur = -cur;
+    }
+
+    if (cur != 0) {
+        xx += sx;
+        xx *= sx = x0 < x2 ? 1 : -1;
+
+        yy += sy;
+        yy *= sy = y0 < y2 ? 1 : -1;
+
+        xy = 2*xx*yy;
+        xx *= xx;
+        yy *= yy;
+
+        if (cur*sx*sy < 0) {
+            xx = -xx;
+            yy = -yy;
+            xy = -xy;
+            cur = -cur;
+        }
+
+        dx = 4.0*sy*cur*(x1-x0)+xx-xy;
+        dy = 4.0*sx*cur*(y0-y1)+yy-xy;
+
+        xx += xx;
+        yy += yy;
+        err = dx+dy+xy;
+
+        do {
+            btprnt_region_draw(r, x0, y0, c);
+
+            if (x0 == x2 && y0 == y2) return;
+
+            y1 = 2*err < dx;
+
+            if (2*err > dy) {
+                x0 += sx;
+                dx -= xy;
+                err += dy += yy;
+            }
+
+            if (y1) {
+                y0 += sy;
+                dy -= xy;
+                err += dx += xx;
+            }
+        } while (dy < dx );
+    }
+
+    btprnt_draw_line(r, x0, y0, x2, y2, c);
+}
+#+END_SRC
