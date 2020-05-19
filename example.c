@@ -65,7 +65,7 @@ static void draw_arrow(btprnt_region *r)
     endx += 50;
     endy += 50;
 
-    btprnt_draw_arrow(r, startx, starty, endx, endy, 1, 1, 1);
+    btprnt_draw_arrow(r, startx, starty, endx, endy, 1, 1, 1, 1);
     endx -= 10;
     btprnt_draw_rect(r, endx, endy, 20, 20, 1);
 
@@ -80,7 +80,7 @@ static void draw_arrow(btprnt_region *r)
     startx += 10;
     starty += 20;
 
-    btprnt_draw_arrow(r, startx, starty, endx, endy, 1, 1, 1);
+    btprnt_draw_arrow(r, startx, starty, endx, endy, 1, 1, 1, 1);
 }
 
 static void draw_bezier(btprnt_region *r)
@@ -89,6 +89,23 @@ static void draw_bezier(btprnt_region *r)
                        0, 150,
                        50, 100,
                        100, 130,
+                       1);
+}
+
+static void draw_bezier_arrow(btprnt_region *r)
+{
+
+    /* btprnt_draw_bezier(r, */
+    /*                    20, 150, */
+    /*                    65, 180, */
+    /*                    90, 150, */
+    /*                    1); */
+
+    btprnt_draw_bezier_arrow(r,
+                       20, 150,
+                       90, 150,
+                       65, 180,
+                       1, 1,
                        1);
 }
 
@@ -150,6 +167,7 @@ int main(int argc, char *argv[])
     draw_arrow(&r);
 
     draw_bezier(&r);
+    draw_bezier_arrow(&r);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 

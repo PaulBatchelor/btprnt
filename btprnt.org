@@ -1506,6 +1506,7 @@ void btprnt_draw_arrow(btprnt_region *r,
                        int end_x, int end_y,
                        int arrow_start,
                        int arrow_end,
+                       int draw_line,
                        int c);
 #+END_SRC
 
@@ -1519,6 +1520,7 @@ void btprnt_draw_arrow(btprnt_region *r,
                        int end_x, int end_y,
                        int arrow_start,
                        int arrow_end,
+                       int draw_line,
                        int c)
 {
     int sz;
@@ -1551,9 +1553,12 @@ void btprnt_draw_arrow(btprnt_region *r,
     /* convert to radians */
     angle *= M_PI / 180.0;
 
-    btprnt_draw_line(r,
-                     start_x, start_y,
-                     end_x, end_y, c);
+    if (draw_line) {
+        btprnt_draw_line(r,
+                        start_x, start_y,
+                        end_x, end_y, c);
+    }
+
     if (arrow_start) {
         ptx[0] = start_x + dir * sz * sin(angle + off);
         pty[0] = start_y + dir * sz * cos(angle + off);
@@ -1723,5 +1728,50 @@ static void bezierseg(btprnt_region *r,
     }
 
     btprnt_draw_line(r, x0, y0, x2, y2, c);
+}
+#+END_SRC
+* Bezier Arrow
+Like an arrow, but with a bezier curved line.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_bezier_arrow(btprnt_region *r,
+                              int start_x, int start_y,
+                              int end_x, int end_y,
+                              int ctrl_x, int ctrl_y,
+                              int arrow_start,
+                              int arrow_end,
+                              int c);
+#+END_SRC
+
+Internally, this is done by drawing two arrowheads pointing
+away from a control point, then drawing a bezier curve
+connecting those two points.
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_bezier_arrow(btprnt_region *r,
+                              int start_x, int start_y,
+                              int end_x, int end_y,
+                              int ctrl_x, int ctrl_y,
+                              int arrow_start,
+                              int arrow_end,
+                              int c)
+{
+    btprnt_draw_arrow(r,
+                      start_x, start_y,
+                      ctrl_x, ctrl_y,
+                      1, 0, 0, c);
+
+    btprnt_draw_arrow(r,
+                      end_x, end_y,
+                      ctrl_x, ctrl_y,
+                      1, 0, 0, c);
+
+    btprnt_draw_bezier(r,
+                       start_x, start_y,
+                       ctrl_x, ctrl_y,
+                       end_x, end_y,
+                       c);
 }
 #+END_SRC
