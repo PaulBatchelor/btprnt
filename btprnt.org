@@ -1775,3 +1775,67 @@ void btprnt_draw_bezier_arrow(btprnt_region *r,
                        c);
 }
 #+END_SRC
+* Tiny Tile
+A tiny tile is a 8x8 tile that can be specified in
+only 3 bytes. It does this breaking up the tile into
+4-bit 2x2 blocks, and then restricting those blocks
+to be only 2 patterns. The first byte stores what
+those two patterns are, and then the 2 remaining
+bytes store the indexes.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_tinytile(btprnt_region *r,
+                          int xpos,
+                          int ypos,
+                          int b0,
+                          int b1,
+                          int b2);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_tinytile(btprnt_region *r,
+                          int xpos,
+                          int ypos,
+                          int b0,
+                          int b1,
+                          int b2)
+{
+    int x, y;
+    b0 &= 0xff;
+    b1 &= 0xff;
+    b2 &= 0xff;
+
+    for (y = 0; y < 4; y++) {
+        for (x = 0; x < 4; x++) {
+            unsigned char pat;
+            int xoff, yoff;
+
+            if (y < 2) {
+                pat = (b1 >> (4 * y)) & (1 << x);
+            } else {
+                pat = (b2 >> (4 * (y - 2))) & (1 << x);
+            }
+
+            pat = (pat ? (b0>>4) : b0) & 0xf;
+
+            xoff = (x<<1) + xpos;
+            yoff = (y<<1) + ypos;
+
+            btprnt_region_draw(r,
+                               xoff, yoff,
+                               pat & 1);
+            btprnt_region_draw(r,
+                               xoff + 1, yoff,
+                               (pat & 2) >> 1);
+            btprnt_region_draw(r,
+                               xoff, yoff + 1,
+                               (pat & 4) >> 2);
+            btprnt_region_draw(r,
+                               xoff + 1, yoff + 1,
+                               (pat & 8) >> 3);
+        }
+    }
+}
+#+END_SRC

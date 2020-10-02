@@ -95,18 +95,36 @@ static void draw_bezier(btprnt_region *r)
 static void draw_bezier_arrow(btprnt_region *r)
 {
 
-    /* btprnt_draw_bezier(r, */
-    /*                    20, 150, */
-    /*                    65, 180, */
-    /*                    90, 150, */
-    /*                    1); */
-
     btprnt_draw_bezier_arrow(r,
                        20, 150,
                        90, 150,
                        65, 180,
                        1, 1,
                        1);
+}
+
+static void draw_tinytile(btprnt_region *r)
+{
+    int pat;
+    int offx, offy;
+
+    /* black square, white square */
+    pat = 0xf0;
+
+    offx = 160;
+    offy = 88;
+
+    /* checkerboard */
+    btprnt_draw_tinytile(r, offx, offy, pat, 0xa5, 0xa5);
+
+    /* vertical lines */
+    btprnt_draw_tinytile(r, offx + 8, offy, pat, 0xaa, 0xaa);
+
+    /* horizontal lines */
+    btprnt_draw_tinytile(r, offx , offy + 8, pat, 0xf0, 0xf0);
+
+    /* box */
+    btprnt_draw_tinytile(r, offx + 8, offy + 8, pat, 0xff, 0xff);
 }
 
 int main(int argc, char *argv[])
@@ -158,6 +176,8 @@ int main(int argc, char *argv[])
                             32, 32, 0);
 
 
+    /* second area to draw stuff */
+
     btprnt_region_init(btprnt_canvas_get(bp),
                        &r, 210, 10,
                        180, 180);
@@ -168,6 +188,8 @@ int main(int argc, char *argv[])
 
     draw_bezier(&r);
     draw_bezier_arrow(&r);
+
+    draw_tinytile(&r);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 
