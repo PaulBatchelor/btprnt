@@ -127,6 +127,16 @@ static void draw_tinytile(btprnt_region *r)
     btprnt_draw_tinytile(r, offx + 8, offy + 8, pat, 0xff, 0xff);
 }
 
+static void draw_centerbox(btprnt_region *r)
+{
+    btprnt_region center;
+
+    btprnt_layout_centerbox(r, 80, 80, &center);
+
+    btprnt_layout_outline(r, 1);
+    btprnt_layout_outline(&center, 1);
+}
+
 int main(int argc, char *argv[])
 {
     btprnt *bp;
@@ -135,7 +145,7 @@ int main(int argc, char *argv[])
     int off;
 
     off = 6;
-    bp = btprnt_new(400, 200);
+    bp = btprnt_new(400, 400);
 
     if (bp == NULL) {
         printf("There was an issue starting btprnt\n");
@@ -190,6 +200,13 @@ int main(int argc, char *argv[])
     draw_bezier_arrow(&r);
 
     draw_tinytile(&r);
+
+    /* bottom-left quadrant */
+    btprnt_region_init(btprnt_canvas_get(bp),
+                       &r, 10, 210,
+                       180, 180);
+
+    draw_centerbox(&r);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 

@@ -10,6 +10,7 @@ functions, otherwise it is just function declarations.
 #ifndef BTPRNT_H
 #define BTPRNT_H
 <<typedefs>>
+<<errorcodes>>
 <<btprnt_region_struct>>
 <<funcdefs>>
 #ifdef BTPRNT_IMPL
@@ -1839,6 +1840,17 @@ void btprnt_draw_tinytile(btprnt_region *r,
     }
 }
 #+END_SRC
+* Error Codes
+Right now, =BTPRNT_OK= and =BTPRNT_NOT_OK= are all that
+is needed.
+
+#+NAME: errorcodes
+#+BEGIN_SRC c
+enum {
+    BTPRNT_OKAY,
+    BTPRNT_NOT_OK
+};
+#+END_SRC
 * TODO Layout
 This section outlines a set of tools used to help assist
 building layouts. Layouts are created by making a region
@@ -1848,18 +1860,76 @@ The operations below are designed to take in a one region
 and output a region. Both regions need to be pre-allocated
 ahead of time. If something goes wrong, these operations
 will return an error code of some kind.
-** TODO outline
+** outline
 The function =btprnt_layout_outline= draws box outside
 of the region. This can be used for debugging and
 visualization.
-** TODO Centerbox
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_layout_outline(btprnt_region *r, int c);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_layout_outline(btprnt_region *r, int c)
+{
+    btprnt_region o;
+    o = *r;
+    o.x--;
+    o.y--;
+    o.w += 2;
+    o.h += 2;
+    btprnt_draw_rect(&o, 0, 0, r->w, r->h, c);
+}
+#+END_SRC
+** Centerbox
 The function =btprnt_layout_centerbox= configures a
 subregion of a particular width and height that is centered
 in the middle of another region. If the width or height are
-out of bounds. An error is returned.
+out of bounds, an error is returned.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+int btprnt_layout_centerbox(btprnt_region *r,
+                            int w, int h,
+                            btprnt_region *s);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+int btprnt_layout_centerbox(btprnt_region *r,
+                            int w, int h,
+                            btprnt_region *s)
+{
+    int vmargin;
+    int hmargin;
+
+    hmargin = (r->w - w) / 2;
+    vmargin = (r->h - h) / 2;
+
+
+    if (hmargin < 0 || vmargin < 0) {
+        s->c = r->c;
+        s->x = 0;
+        s->y = 0;
+        s->w = 0;
+        s->h = 0;
+        return BTPRNT_NOT_OK;
+    }
+
+    s->c = r->c;
+    s->x = r->x + hmargin;
+    s->y = r->y + vmargin;
+    s->w = w;
+    s->h = h;
+
+    return BTPRNT_NOT_OK;
+}
+#+END_SRC
 ** TODO Border
 The function =btprnt_layout_border= configures a subregions
-with equal-sized margins surrounding it
+with equal-sized margins surrounding it.
 ** TODO Grid
 The function =btprnt_layout_grid= returns a region that
 belongs to a grid of arbitrary rows and columns.
