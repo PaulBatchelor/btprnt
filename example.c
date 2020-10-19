@@ -130,11 +130,19 @@ static void draw_tinytile(btprnt_region *r)
 static void draw_centerbox(btprnt_region *r)
 {
     btprnt_region center;
+    btprnt_region g;
 
-    btprnt_layout_centerbox(r, 80, 80, &center);
+    btprnt_layout_centerbox(r, 80, 100, &center);
 
     btprnt_layout_outline(r, 1);
     btprnt_layout_outline(&center, 1);
+
+    btprnt_layout_grid(&center, 1, 3, 0, 0, &g);
+    btprnt_layout_outline(&g, 1);
+    btprnt_layout_grid(&center, 1, 3, 0, 1, &g);
+    btprnt_layout_outline(&g, 1);
+    btprnt_layout_grid(&center, 1, 3, 0, 2, &g);
+    btprnt_layout_outline(&g, 1);
 }
 
 int main(int argc, char *argv[])

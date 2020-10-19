@@ -1847,7 +1847,7 @@ is needed.
 #+NAME: errorcodes
 #+BEGIN_SRC c
 enum {
-    BTPRNT_OKAY,
+    BTPRNT_OK,
     BTPRNT_NOT_OK
 };
 #+END_SRC
@@ -1880,7 +1880,7 @@ void btprnt_layout_outline(btprnt_region *r, int c)
     o.y--;
     o.w += 2;
     o.h += 2;
-    btprnt_draw_rect(&o, 0, 0, r->w, r->h, c);
+    btprnt_draw_rect(&o, 0, 0, o.w, o.h, c);
 }
 #+END_SRC
 ** Centerbox
@@ -1933,6 +1933,57 @@ with equal-sized margins surrounding it.
 ** TODO Grid
 The function =btprnt_layout_grid= returns a region that
 belongs to a grid of arbitrary rows and columns.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+int btprnt_layout_grid(btprnt_region *r,
+                       int nrows,
+                       int ncols,
+                       int row,
+                       int col,
+                       btprnt_region *s);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+int btprnt_layout_grid(btprnt_region *r,
+                       int nrows,
+                       int ncols,
+                       int row,
+                       int col,
+                       btprnt_region *s)
+{
+    int hspace;
+    int vspace;
+    int err;
+
+    hspace = r->w / nrows;
+    vspace = r->h / ncols;
+
+    err = hspace <= 0 || vspace <= 0;
+    err = err || row >= nrows || col >= ncols;
+
+    if (err) {
+        s->c = r->c;
+        s->x = 0;
+        s->y = 0;
+        s->w = 0;
+        s->h = 0;
+        return BTPRNT_NOT_OK;
+    }
+
+    s->c = r->c;
+    s->x = r->x + hspace * row;
+    s->y = r->y + vspace * col;
+    s->w = hspace;
+    s->h = vspace;
+
+    if (row == (nrows - 1)) s->w = r->w - (hspace * row);
+    if (col == (ncols - 1)) s->h = r->h - (vspace * col);
+
+    return BTPRNT_OK;
+}
+#+END_SRC
 
 Any subregion that is in the last row or column will contain
 any "carry-over" that occurs from things not dividing
