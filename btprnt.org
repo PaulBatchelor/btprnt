@@ -1839,3 +1839,31 @@ void btprnt_draw_tinytile(btprnt_region *r,
     }
 }
 #+END_SRC
+* TODO Layout
+This section outlines a set of tools used to help assist
+building layouts. Layouts are created by making a region
+that is subregion of another region.
+
+The operations below are designed to take in a one region
+and output a region. Both regions need to be pre-allocated
+ahead of time. If something goes wrong, these operations
+will return an error code of some kind.
+** TODO outline
+The function =btprnt_layout_outline= draws box outside
+of the region. This can be used for debugging and
+visualization.
+** TODO Centerbox
+The function =btprnt_layout_centerbox= configures a
+subregion of a particular width and height that is centered
+in the middle of another region. If the width or height are
+out of bounds. An error is returned.
+** TODO Border
+The function =btprnt_layout_border= configures a subregions
+with equal-sized margins surrounding it
+** TODO Grid
+The function =btprnt_layout_grid= returns a region that
+belongs to a grid of arbitrary rows and columns.
+
+Any subregion that is in the last row or column will contain
+any "carry-over" that occurs from things not dividing
+properly.
