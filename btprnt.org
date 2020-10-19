@@ -1927,10 +1927,37 @@ int btprnt_layout_centerbox(btprnt_region *r,
     return BTPRNT_NOT_OK;
 }
 #+END_SRC
-** TODO Border
+** Border
 The function =btprnt_layout_border= configures a subregions
 with equal-sized margins surrounding it.
-** TODO Grid
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+int btprnt_layout_border(btprnt_region *r,
+                         int border,
+                         btprnt_region *s);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+int btprnt_layout_border(btprnt_region *r,
+                         int border,
+                         btprnt_region *s)
+{
+    if (r->w < (2 * border) || r->h < (2 * border)) {
+        return BTPRNT_NOT_OK;
+    }
+
+    s->c = r->c;
+    s->x = r->x + border;
+    s->y = r->y + border;
+    s->w = r->w - 2*border;
+    s->h = r->h - 2*border;
+
+    return BTPRNT_OK;
+}
+#+END_SRC
+** Grid
 The function =btprnt_layout_grid= returns a region that
 belongs to a grid of arbitrary rows and columns.
 
