@@ -1851,7 +1851,7 @@ enum {
     BTPRNT_NOT_OK
 };
 #+END_SRC
-* TODO Layout
+* Layout
 This section outlines a set of tools used to help assist
 building layouts. Layouts are created by making a region
 that is subregion of another region.
@@ -1924,7 +1924,7 @@ int btprnt_layout_centerbox(btprnt_region *r,
     s->w = w;
     s->h = h;
 
-    return BTPRNT_NOT_OK;
+    return BTPRNT_OK;
 }
 #+END_SRC
 ** Border
