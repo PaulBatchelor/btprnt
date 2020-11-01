@@ -603,6 +603,35 @@ void btprnt_region_draw(btprnt_region *r,
     btprnt_buf_write(cv->buf, gx, gy, c);
 }
 #+END_SRC
+
+Get the pixel of the region with coordinates relative to
+the region with =btprnt_region_read=.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+int btprnt_region_read(btprnt_region *r, int x, int y);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+int btprnt_region_read(btprnt_region *r, int x, int y)
+{
+    btprnt_canvas *cv;
+    int gx, gy;
+
+    cv = r->c;
+
+    if (x < 0 || x >= r->w) return 0;
+    if (y < 0 || y >= r->h) return 0;
+
+    gx = cv->offx + r->x + x;
+    if (gx < 0 || gx >= cv->buf->w) return 0;
+    gy = cv->offy + r->y + y;
+    if (gy < 0 || gy >= cv->buf->h) return 0;
+
+    return btprnt_buf_read(cv->buf, gx, gy);
+}
+#+END_SRC
 * The Canvas
 The canvas is an abstraction of the bitmap buffer. Regions
 get drawn to the buffer via a canvas.
@@ -2015,3 +2044,41 @@ int btprnt_layout_grid(btprnt_region *r,
 Any subregion that is in the last row or column will contain
 any "carry-over" that occurs from things not dividing
 properly.
+* Invert
+Inverts colors on a portion of a region.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_invert(btprnt_region *r,
+                   int xoff, int yoff,
+                   int w, int h);
+#+END_SRC
+
+Later, add bounds checking.
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_invert(btprnt_region *r,
+                   int xoff, int yoff,
+                   int w, int h)
+{
+    int x, y;
+    /* TODO: add bounds checking */
+    for (x = 0; x < w; x++) {
+        for (y = 0; y < h; y ++) {
+            int s;
+            int xp, yp;
+            xp = x + xoff;
+            yp = y + yoff;
+            s = btprnt_region_read(r, xp, yp);
+
+            if (s) {
+                btprnt_region_draw(r, xp, yp, 0);
+            } else {
+                btprnt_region_draw(r, xp, yp, 1);
+            }
+        }
+    }
+
+}
+#+END_SRC
