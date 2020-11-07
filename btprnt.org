@@ -1284,6 +1284,63 @@ void btprnt_draw_circ(btprnt_region *r,
 }
 #+END_SRC
 ** Filled Circle
+=btprnt_draw_circ_filled= uses an adaptation of the midpoint
+circle algorithm to draw a filled circle. It has been
+adapated from a previous project of mine.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_circ_filled(btprnt_region *r,
+                      int cx, int cy,
+                      int rad,
+                      int clr);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_circ_filled(btprnt_region *r,
+                      int cx, int cy,
+                      int rad,
+                      int clr)
+{
+
+    int x;
+    int y;
+    int err;
+
+    x = rad;
+    y = 0;
+    err = 0;
+
+    while (x >= y) {
+        btprnt_draw_line(r,
+                         cx - x, cy + y,
+                         cx + x, cy + y,
+                         clr);
+        btprnt_draw_line(r,
+                         cx - y, cy + x,
+                         cx + y, cy + x,
+                         clr);
+        btprnt_draw_line(r,
+                         cx + x, cy - y,
+                         cx - x, cy - y,
+                         clr);
+        btprnt_draw_line(r,
+                         cx + y, cy - x,
+                         cx - y, cy - x,
+                         clr);
+        if (err <= 0) {
+            y += 1;
+            err += 2 * y + 1;
+        }
+
+        if (err > 0) {
+            x -= 1;
+            err -= 2 * x + 1;
+        }
+    }
+}
+#+END_SRC
 * TODO Rounded Rectangle
 ** Stroked Rounded Rectangle
 ** Filled Rounded Rectangle
