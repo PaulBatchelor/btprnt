@@ -1216,7 +1216,7 @@ void btprnt_draw_rect_filled(btprnt_region *r,
     }
 }
 #+END_SRC
-* WIP Circle
+* Circle
 ** Stroked Circle
 Midpoint circle algorithm.
 
@@ -1254,6 +1254,7 @@ static void circ_pixel(btprnt_region *r,
     btprnt_region_draw(r, cx + y, cy - x, clr);
     btprnt_region_draw(r, cx - y, cy - x, clr);
 }
+
 void btprnt_draw_circ(btprnt_region *r,
                       int cx, int cy,
                       int rad,
@@ -1286,7 +1287,7 @@ void btprnt_draw_circ(btprnt_region *r,
 ** Filled Circle
 =btprnt_draw_circ_filled= uses an adaptation of the midpoint
 circle algorithm to draw a filled circle. It has been
-adapated from a previous project of mine.
+adapated from =btprnt_draw_circ=.
 
 #+NAME: funcdefs
 #+BEGIN_SRC c
@@ -1296,48 +1297,59 @@ void btprnt_draw_circ_filled(btprnt_region *r,
                       int clr);
 #+END_SRC
 
+
 #+NAME: funcs
 #+BEGIN_SRC c
+static void circ_line(btprnt_region *r,
+                       int cx, int cy,
+                       int x, int y,
+                       int clr)
+{
+    btprnt_draw_line(r,
+                     cx - x, cy + y,
+                     cx + x, cy + y,
+                     clr);
+    btprnt_draw_line(r,
+                     cx - y, cy + x,
+                     cx + y, cy + x,
+                     clr);
+    btprnt_draw_line(r,
+                     cx + x, cy - y,
+                     cx - x, cy - y,
+                     clr);
+    btprnt_draw_line(r,
+                     cx + y, cy - x,
+                     cx - y, cy - x,
+                     clr);
+
+}
+
 void btprnt_draw_circ_filled(btprnt_region *r,
                       int cx, int cy,
                       int rad,
                       int clr)
 {
-
     int x;
     int y;
     int err;
 
-    x = rad;
-    y = 0;
-    err = 0;
+    x = 0;
+    y = rad;
+    err = 1 - rad;
 
-    while (x >= y) {
-        btprnt_draw_line(r,
-                         cx - x, cy + y,
-                         cx + x, cy + y,
-                         clr);
-        btprnt_draw_line(r,
-                         cx - y, cy + x,
-                         cx + y, cy + x,
-                         clr);
-        btprnt_draw_line(r,
-                         cx + x, cy - y,
-                         cx - x, cy - y,
-                         clr);
-        btprnt_draw_line(r,
-                         cx + y, cy - x,
-                         cx - y, cy - x,
-                         clr);
-        if (err <= 0) {
-            y += 1;
-            err += 2 * y + 1;
+    circ_line(r, cx, cy, x, y, clr);
+
+    while (x < y) {
+        x++;
+
+        if (err < 0) {
+            err += 2 * x + 1;
+        } else {
+            y--;
+            err += 2 * (x - y) + 1;
         }
 
-        if (err > 0) {
-            x -= 1;
-            err -= 2 * x + 1;
-        }
+        circ_line(r, cx, cy, x, y, clr);
     }
 }
 #+END_SRC

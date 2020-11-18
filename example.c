@@ -227,6 +227,9 @@ int main(int argc, char *argv[])
 
     draw_centerbox(&r);
 
+    btprnt_draw_circ_filled(&r, 10, 10, 8, 1);
+    btprnt_draw_circ(&r, 30, 10, 8, 1);
+
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 
     btprnt_del(&bp);
