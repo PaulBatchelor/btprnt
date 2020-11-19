@@ -156,6 +156,20 @@ static void draw_centerbox(btprnt_region *r)
     btprnt_layout_outline(&b, 1);
 }
 
+static void draw_hexagon(btprnt_region *r, int xpos, int ypos)
+{
+    int x, y;
+
+    x = xpos;
+    y = ypos;
+    btprnt_draw_slopeline(r, x, y, 1, 2, 7, 1, &x, &y);
+    btprnt_draw_slopeline(r, x, y, 1, 0, 10, 1, &x, &y);
+    btprnt_draw_slopeline(r, x + 1, y - 1, 1, -2, 7, 1, &x, &y);
+    btprnt_draw_slopeline(r, x - 1, y - 1, -1, -2, 7, 1, &x, &y);
+    btprnt_draw_slopeline(r, x, y, -1, 0, 10, 1, &x, &y);
+    btprnt_draw_slopeline(r, x - 1, y + 1, -1, 2, 7, 1, &x, &y);
+}
+
 int main(int argc, char *argv[])
 {
     btprnt *bp;
@@ -229,6 +243,12 @@ int main(int argc, char *argv[])
 
     btprnt_draw_circ_filled(&r, 10, 10, 8, 1);
     btprnt_draw_circ(&r, 30, 10, 8, 1);
+
+    draw_hexagon(&r, 4, 100);
+    draw_hexagon(&r, 4 + 13, 100 + 7);
+    draw_hexagon(&r, 4 + 13, 100 - 7);
+    draw_hexagon(&r, 4, 100 - 14);
+    draw_hexagon(&r, 4 + 13, 100 - 21);
 
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 

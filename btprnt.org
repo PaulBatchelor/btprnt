@@ -2183,3 +2183,80 @@ void btprnt_bitrow(btprnt_region *reg,
     }
 }
 #+END_SRC
+* Slope Line
+Draws N pixel steps with a specified slope, and returns
+the last coordinate (if the values are not NULL).
+
+This is created with the intention of facilitating
+generative pixel art.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_slopeline(btprnt_region *r,
+                           int xstart,
+                           int ystart,
+                           int xslp,
+                           int yslp,
+                           int nsteps,
+                           int clr,
+                           int *xlast,
+                           int *ylast);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_slopeline(btprnt_region *r,
+                           int xstart,
+                           int ystart,
+                           int xslp,
+                           int yslp,
+                           int nsteps,
+                           int clr,
+                           int *xlast,
+                           int *ylast)
+{
+    int c;
+    int xp, yp;
+    int ydir, xdir;
+
+    c = nsteps;
+
+    xp = xstart;
+    yp = ystart;
+
+    xdir = (xslp < 0) ? -1 : 1;
+    ydir = (yslp < 0) ? -1 : 1;
+
+    xslp = abs(xslp);
+    yslp = abs(yslp);
+
+    while (c > 0) {
+        int x, y;
+        for (x = 0; x < xslp; x++) {
+            btprnt_region_draw(r, xp, yp, clr);
+            c--;
+            if (c <= 0) break;
+            xp += xdir;
+        }
+
+        if (c <= 0) break;
+
+        for (y = 0; y < yslp; y++) {
+            if (y > 0) {
+                btprnt_region_draw(r, xp - xdir, yp, clr);
+                c--;
+                if (c <= 0) break;
+            }
+            yp += ydir;
+        }
+
+    }
+
+    if (xlast != NULL) *xlast = xp;
+    if (ylast != NULL) *ylast = yp;
+}
+#+END_SRC
+* TODO Pattern Line
+Draws a horizontal using a pattern for color.
+This will be the base for pattern-filled
+shapes.
