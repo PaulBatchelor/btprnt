@@ -250,6 +250,21 @@ int main(int argc, char *argv[])
     draw_hexagon(&r, 4, 100 - 14);
     draw_hexagon(&r, 4 + 13, 100 - 21);
 
+    /* bottom-right quadrant */
+    btprnt_region_init(btprnt_canvas_get(bp),
+                       &r, 210, 210,
+                       180, 180);
+
+    btprnt_layout_outline(&r, 1);
+    btprnt_draw_circ(&r, 32, 32, 16, 1);
+    btprnt_draw_thickcirc(&r, 70, 32, 16, 2, 1);
+    btprnt_draw_thickcirc(&r, 110, 32, 16, 4, 1);
+    btprnt_draw_thickcirc(&r, 155, 32, 16, 8, 1);
+
+    btprnt_draw_thickline(&r, 10, 170, 90, 100, 3, 1);
+    btprnt_draw_thickline(&r, 10, 170, 40, 100, 2, 1);
+    btprnt_draw_thickline(&r, 10, 170, 90, 150, 4, 1);
+
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 
     btprnt_del(&bp);

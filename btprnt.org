@@ -1105,9 +1105,9 @@ void btprnt_draw_vline(btprnt_region *r,
     }
 }
 #+END_SRC
-** DONE Regular Line
-CLOSED: [2020-04-25 Sat 09:43]
-Bresenham circle algorithm.
+** Regular Line
+Bresenham line algorithm.
+
 #+NAME: funcdefs
 #+BEGIN_SRC c
 void btprnt_draw_line(btprnt_region *reg,
@@ -1115,6 +1115,7 @@ void btprnt_draw_line(btprnt_region *reg,
                       int x1, int y1,
                       int clr);
 #+END_SRC
+
 #+NAME: funcs
 #+BEGIN_SRC c
 static void swap(int *a, int *b)
@@ -1167,6 +1168,67 @@ void btprnt_draw_line(btprnt_region *reg,
     }
 }
 #+END_SRC
+** Thick Line
+=btprnt_draw_thickline= draws a thick line. This is a
+modification of the Bresenham algorithm. Instead of pixels,
+little circles are drawn.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_thickline(btprnt_region *reg,
+                           int x0, int y0,
+                           int x1, int y1,
+                           int thick,
+                           int clr);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_thickline(btprnt_region *reg,
+                           int x0, int y0,
+                           int x1, int y1,
+                           int thick,
+                           int clr)
+{
+    int x, y;
+    int dx, dy;
+    int derror2;
+    int error2;
+    char steep = 0;
+
+    if (abs(x0 - x1) < abs(y0 - y1)) {
+        swap(&x0, &y0);
+        swap(&x1, &y1);
+        steep = 1;
+    }
+
+    if (x0 > x1) {
+        swap(&x0, &x1);
+        swap(&y0, &y1);
+    }
+
+    dx = x1 - x0;
+    dy = y1 - y0;
+    derror2 = abs(dy) * 2;
+    error2 = 0;
+    y = y0;
+
+    for (x = x0; x < x1; x++) {
+        if (steep) {
+            btprnt_draw_circ_filled(reg, y, x, thick, clr);
+        } else {
+            btprnt_draw_circ_filled(reg, x, y, thick, clr);
+        }
+        error2 += derror2;
+        if (error2 > dx) {
+            y += (y1 > y0 ? 1 : -1);
+            error2 -= dx * 2;
+        }
+    }
+}
+#+END_SRC
+
+
 * Rectangle
 ** Stroked Rectangle
 #+NAME: funcdefs
@@ -1350,6 +1412,67 @@ void btprnt_draw_circ_filled(btprnt_region *r,
         }
 
         circ_line(r, cx, cy, x, y, clr);
+    }
+}
+#+END_SRC
+** Thick Circle
+=btprnt_draw_thickcirc= will draw a circle
+with a thick outline with a radius =rad=, thickness
+=thick=, and color =c=.
+This works like the normal midpoint circle algorithm,
+except that it draws filled circles instead of pixels.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_thickcirc(btprnt_region *r,
+                           int cx, int cy,
+                           int rad, int thick,
+                           int clr);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+static void circ_dots(btprnt_region *r,
+                       int cx, int cy,
+                       int x, int y,
+                       int clr, int thick)
+{
+    btprnt_draw_circ_filled(r, cx - x, cy + y, thick, clr);
+    btprnt_draw_circ_filled(r, cx + x, cy + y, thick, clr);
+    btprnt_draw_circ_filled(r, cx - y, cy + x, thick, clr);
+    btprnt_draw_circ_filled(r, cx + y, cy + x, thick, clr);
+    btprnt_draw_circ_filled(r, cx + x, cy - y, thick, clr);
+    btprnt_draw_circ_filled(r, cx - x, cy - y, thick, clr);
+    btprnt_draw_circ_filled(r, cx + y, cy - x, thick, clr);
+    btprnt_draw_circ_filled(r, cx - y, cy - x, thick, clr);
+}
+
+void btprnt_draw_thickcirc(btprnt_region *r,
+                           int cx, int cy,
+                           int rad, int thick,
+                           int clr)
+{
+    int x;
+    int y;
+    int err;
+
+    x = 0;
+    y = rad;
+    err = 1 - rad;
+
+    circ_dots(r, cx, cy, x, y, clr, thick);
+
+    while (x < y) {
+        x++;
+
+        if (err < 0) {
+            err += 2 * x + 1;
+        } else {
+            y--;
+            err += 2 * (x - y) + 1;
+        }
+
+        circ_dots(r, cx, cy, x, y, clr, thick);
     }
 }
 #+END_SRC
