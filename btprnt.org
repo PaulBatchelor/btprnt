@@ -881,11 +881,13 @@ void btprnt_draw_wraptext(btprnt_region *reg,
 
     for (n = 0; n < len; n++) {
         curpos = xpos + w*c;
-        if (curpos > reg->w) {
+
+        if (curpos >= reg->w) {
             curpos = xpos;
             line++;
             c = 0;
         }
+
         btprnt_draw_char(reg, map,
                          curpos, ypos + line*h,
                          w, h,
