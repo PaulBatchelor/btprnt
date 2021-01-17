@@ -569,6 +569,7 @@ void btprnt_region_height_set(btprnt_region *r, int h)
 }
 #+END_SRC
 ** Writing a Pixel
+*** Default Write
 Drawing utilities write to a region. The region ensures that
 the pixel is not being written beyond the bounds of itself.
 The actual placement on the buffer is handled via a canvas.
@@ -579,9 +580,11 @@ void btprnt_region_draw(btprnt_region *r,
                         int x, int y,
                         int c);
 #+END_SRC
+
 For now, this function will be a little bit overpowered. In
 the future, it might be better to break this up into
 different components and flesh out the canvas interface.
+
 #+NAME: funcs
 #+BEGIN_SRC c
 void btprnt_region_draw(btprnt_region *r,
@@ -595,6 +598,46 @@ void btprnt_region_draw(btprnt_region *r,
 
     if (x < 0 || x >= r->w) return;
     if (y < 0 || y >= r->h) return;
+
+    gx = cv->offx + r->x + x;
+    if (gx < 0 || gx >= cv->buf->w) return;
+    gy = cv->offy + r->y + y;
+    if (gy < 0 || gy >= cv->buf->h) return;
+
+    btprnt_buf_write(cv->buf, gx, gy, c);
+}
+#+END_SRC
+*** TODO Write with wraparound
+This will write a pixel, but will wraparound the region
+instead of truncating.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_region_draw_wrap(btprnt_region *r,
+                             int x, int y,
+                             int c);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_region_draw_wrap(btprnt_region *r,
+                             int x, int y,
+                             int c)
+{
+    btprnt_canvas *cv;
+    int gx, gy;
+
+    cv = r->c;
+
+    if (x < 0 || x >= r->w) {
+        /* TODO: wraparound */
+        return;
+    }
+
+    if (y < 0 || y >= r->h) {
+        /* TODO: wraparound */
+        return;
+    }
 
     gx = cv->offx + r->x + x;
     if (gx < 0 || gx >= cv->buf->w) return;
