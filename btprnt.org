@@ -437,6 +437,7 @@ void btprnt_buf_xbm(btprnt_buf *buf,
 }
 #+END_SRC
 * The Region
+** Region Overview
 Regions are rectangular spaces to draw stuff into.
 
 #+NAME: typedefs
@@ -463,7 +464,7 @@ struct btprnt_region {
     int x, y;
 };
 #+END_SRC
-
+** Create a New Region
 A new region is created with =btprnt_region_new=.
 
 #+NAME: funcdefs
@@ -490,7 +491,7 @@ btprnt_region * btprnt_region_new(btprnt_canvas *c,
     return r;
 }
 #+END_SRC
-
+** Freeing a region
 It is freed with =btprnt_region_del=.
 
 #+NAME: funcdefs
@@ -507,7 +508,7 @@ void btprnt_region_del(btprnt_region **r)
     *r = NULL;
 }
 #+END_SRC
-
+** Initializing a Region
 If a region is to be allocated on the stack, it needs
 only to be initialized. This can be done with
 =btprnt_region_init=.
@@ -533,7 +534,7 @@ void btprnt_region_init(btprnt_canvas *c,
     r->c = c;
 }
 #+END_SRC
-
+** Setters
 The dimensions and position can be changed after it is
 instantiated.
 
@@ -567,7 +568,7 @@ void btprnt_region_height_set(btprnt_region *r, int h)
     r->h = h;
 }
 #+END_SRC
-
+** Writing a Pixel
 Drawing utilities write to a region. The region ensures that
 the pixel is not being written beyond the bounds of itself.
 The actual placement on the buffer is handled via a canvas.
@@ -603,7 +604,7 @@ void btprnt_region_draw(btprnt_region *r,
     btprnt_buf_write(cv->buf, gx, gy, c);
 }
 #+END_SRC
-
+** Reading a Pixel
 Get the pixel of the region with coordinates relative to
 the region with =btprnt_region_read=.
 
