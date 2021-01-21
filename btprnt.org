@@ -607,7 +607,7 @@ void btprnt_region_draw(btprnt_region *r,
     btprnt_buf_write(cv->buf, gx, gy, c);
 }
 #+END_SRC
-*** TODO Write with wraparound
+*** Write with wraparound
 This will write a pixel, but will wraparound the region
 instead of truncating.
 
@@ -617,6 +617,15 @@ void btprnt_region_draw_wrap(btprnt_region *r,
                              int x, int y,
                              int c);
 #+END_SRC
+
+Wraparound works by ensuring that X does is within
+range =(0, tw)= and Y is in range =(0, th)=, where =tw= and
+=th= are the target widths and heights.
+
+After these local coordinates are found, the global
+coordinates are factored in by applying the canvas
+offsets. Hard bounds checking is done here. If they
+exceed, no drawing is done.
 
 #+NAME: funcs
 #+BEGIN_SRC c
@@ -629,15 +638,11 @@ void btprnt_region_draw_wrap(btprnt_region *r,
 
     cv = r->c;
 
-    if (x < 0 || x >= r->w) {
-        /* TODO: wraparound */
-        return;
-    }
+    while (x < 0) x += r->w;
+    while (x >= r->w) x -= r->w;
 
-    if (y < 0 || y >= r->h) {
-        /* TODO: wraparound */
-        return;
-    }
+    while (y < 0) y += r->h;
+    while (y >= r->h) y -= r->h;
 
     gx = cv->offx + r->x + x;
     if (gx < 0 || gx >= cv->buf->w) return;
