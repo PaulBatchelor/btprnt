@@ -19,6 +19,7 @@ functions, otherwise it is just function declarations.
 #define M_PI 3.14159265358979323846
 #endif
 <<structs>>
+<<static_funcdefs>>
 <<funcs>>
 #endif
 #endif
@@ -771,7 +772,66 @@ fundamentals. This can be broken up into levels.
 ** Level 1: Drawing tiles from a map
 The lowest layer involves drawing a single tile
 from a tile map stored in memory.
+*** Top Level Draw Tile
+The static function =draw_tile= will draw the tile using
+a specified =draw= callback, to allow for regular or
+wraparound drawing.
 
+#+NAME: static_funcdefs
+#+BEGIN_SRC c
+static void draw_tile(btprnt_region *reg,
+                      btprnt_buf *map,
+                      int xpos, int ypos,
+                      int mx, int my,
+                      int w, int h,
+                      int scale, int color,
+                      void (*draw)(btprnt_region*,int,int,int));
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+static void draw_tile(btprnt_region *reg,
+                      btprnt_buf *map,
+                      int xpos, int ypos,
+                      int mx, int my,
+                      int w, int h,
+                      int scale, int color,
+                      void (*draw)(btprnt_region*,int,int,int))
+{
+    int startx;
+    int starty;
+    int x;
+    int y;
+    int c;
+
+    startx = mx * w;
+    starty = my * h;
+
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            c = btprnt_buf_read(map,
+                                startx + x,
+                                starty + y);
+            if (c) {
+                if (scale == 1) {
+                    draw(reg, xpos + x, ypos + y, color);
+                } else {
+                    int sx, sy;
+                    for (sy = 0; sy < scale; sy++) {
+                        for (sx = 0; sx < scale; sx++) {
+                            draw(reg,
+                                 xpos + x*scale + sx,
+                                 ypos + y*scale + sy,
+                                 color);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+#+END_SRC
+*** Default Draw Tile
 #+NAME: funcdefs
 #+BEGIN_SRC c
 void btprnt_draw_tile(btprnt_region *reg,
@@ -791,39 +851,42 @@ void btprnt_draw_tile(btprnt_region *reg,
                       int w, int h,
                       int scale, int color)
 {
-    int startx;
-    int starty;
-    int x;
-    int y;
-    int c;
+    draw_tile(reg, map,
+              xpos, ypos,
+              mx, my,
+              w, h,
+              scale, color,
+              btprnt_region_draw);
+}
+#+END_SRC
+*** Draw Tile with Wraparound
+This draws a tile in a region, but using wraparound.
 
-    startx = mx * w;
-    starty = my * h;
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_tile_wrap(btprnt_region *reg,
+                           btprnt_buf *map,
+                           int xpos, int ypos,
+                           int mx, int my,
+                           int w, int h,
+                           int scale, int color);
+#+END_SRC
 
-    for (y = 0; y < h; y++) {
-        for (x = 0; x < w; x++) {
-            c = btprnt_buf_read(map,
-                                startx + x,
-                                starty + y);
-            if (c) {
-                if (scale == 1) {
-                    btprnt_region_draw(reg,
-                                       xpos + x, ypos + y,
-                                       color);
-                } else {
-                    int sx, sy;
-                    for (sy = 0; sy < scale; sy++) {
-                        for (sx = 0; sx < scale; sx++) {
-                            btprnt_region_draw(reg,
-                                               xpos + x*scale + sx,
-                                               ypos + y*scale + sy,
-                                               color);
-                        }
-                    }
-                }
-            }
-        }
-    }
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_tile_wrap(btprnt_region *reg,
+                           btprnt_buf *map,
+                           int xpos, int ypos,
+                           int mx, int my,
+                           int w, int h,
+                           int scale, int color)
+{
+    draw_tile(reg, map,
+              xpos, ypos,
+              mx, my,
+              w, h,
+              scale, color,
+              btprnt_region_draw_wrap);
 }
 #+END_SRC
 ** Level 2: Drawing a character
@@ -864,6 +927,42 @@ void btprnt_draw_char(btprnt_region *reg,
                      scale, color);
 }
 #+END_SRC
+
+=btprnt_draw_char_wrap= can do the same thing, but with
+wrapping.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_char_wrap(btprnt_region *reg,
+                           btprnt_buf *map,
+                           int xpos, int ypos,
+                           int w, int h,
+                           char c, int scale, int color);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_char_wrap(btprnt_region *reg,
+                           btprnt_buf *map,
+                           int xpos, int ypos,
+                           int w, int h,
+                           char c, int scale, int color)
+{
+    int gx, gy;
+    char o;
+
+    o = c - ' '; /* start at 0 */
+
+    gx = o % (map->stride);
+    gy = o / (map->stride);
+
+    btprnt_draw_tile_wrap(reg, map,
+                          xpos, ypos,
+                          gx, gy,
+                          w, h,
+                          scale, color);
+}
+#+END_SRC
 ** Level 3: Drawing a string
 From there, a string characters can be drawn onto a
 region.
@@ -894,6 +993,39 @@ void btprnt_draw_text(btprnt_region *reg,
                          xpos + w*n, ypos,
                          w, h,
                          str[n], 1, 1);
+    }
+}
+#+END_SRC
+
+=btprnt_draw_scrolling_text= will draw text with bounds
+wrapping.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_draw_scrolling_text(btprnt_region *reg,
+                                btprnt_buf *map,
+                                int xpos, int ypos,
+                                int w, int h,
+                                const char *str);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_draw_scrolling_text(btprnt_region *reg,
+                                btprnt_buf *map,
+                                int xpos, int ypos,
+                                int w, int h,
+                                const char *str)
+{
+    int len;
+    int n;
+    len = strlen(str);
+
+    for (n = 0; n < len; n++) {
+        btprnt_draw_char_wrap(reg, map,
+                              xpos + w*n, ypos,
+                              w, h,
+                              str[n], 1, 1);
     }
 }
 #+END_SRC
