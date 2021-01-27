@@ -2340,7 +2340,7 @@ The operations below are designed to take in a one region
 and output a region. Both regions need to be pre-allocated
 ahead of time. If something goes wrong, these operations
 will return an error code of some kind.
-** outline
+** Outline
 The function =btprnt_layout_outline= draws box outside
 of the region. This can be used for debugging and
 visualization.
