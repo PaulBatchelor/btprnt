@@ -891,9 +891,13 @@ void btprnt_draw_tile_wrap(btprnt_region *reg,
 #+END_SRC
 ** Level 2: Drawing a character
 To draw the right tile, we need to be be able to match
-an ASCII character to the position on the map. Right now,
-the layout for the map matches that of many of the C64
-tileset dumps found online. More details on that later.
+an ASCII character to the position on the map, staring
+with the 'space' character. Maps will
+assume the glyphs are in ascii order, and are fixed width
+and height.
+
+The number of glyph columns in the map (=ncols=) is obtained
+in order to calculate the glyph coordinates =gx= and =gy=.
 
 #+NAME: funcdefs
 #+BEGIN_SRC c
@@ -914,11 +918,14 @@ void btprnt_draw_char(btprnt_region *reg,
 {
     int gx, gy;
     char o;
+    int ncols;
 
     o = c - ' '; /* start at 0 */
 
-    gx = o % (map->stride);
-    gy = o / (map->stride);
+    ncols = map->w / w;
+
+    gx = o % ncols;
+    gy = o / ncols;
 
     btprnt_draw_tile(reg, map,
                      xpos, ypos,
@@ -950,11 +957,14 @@ void btprnt_draw_char_wrap(btprnt_region *reg,
 {
     int gx, gy;
     char o;
+    int ncols;
 
     o = c - ' '; /* start at 0 */
 
-    gx = o % (map->stride);
-    gy = o / (map->stride);
+    ncols = map->w / w;
+
+    gx = o % ncols;
+    gy = o / ncols;
 
     btprnt_draw_tile_wrap(reg, map,
                           xpos, ypos,
