@@ -16,4 +16,4 @@ install: btprnt.h libbtprnt.a
 	cp libbtprnt.a /usr/local/lib
 
 clean:
-	$(RM) btprnt.h out.pbm example
+	$(RM) btprnt.h out.pbm example libbtprnt.a btprnt.o

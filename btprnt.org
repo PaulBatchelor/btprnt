@@ -392,6 +392,23 @@ void btprnt_buf_pbm(btprnt_buf *buf, const char *filename)
     fclose(fp);
 }
 #+END_SRC
+
+The function =btprnt_pbm= is a helpful function that calls
+=btprnt_buf_pbm= from the =btprnt= struct.
+
+#+NAME: funcdefs
+#+BEGIN_SRC c
+void btprnt_pbm(btprnt *bp, const char *filename);
+#+END_SRC
+
+#+NAME: funcs
+#+BEGIN_SRC c
+void btprnt_pbm(btprnt *bp, const char *filename)
+{
+    btprnt_buf_pbm(bp->buf, filename);
+}
+#+END_SRC
+
 ** Write buffer to XBM file
 The buffer can also be written to an XBM file using
 the function =btprnt_buf_xbm=.
