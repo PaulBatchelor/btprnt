@@ -264,6 +264,9 @@ int main(int argc, char *argv[])
     btprnt_draw_thickline(&r, 10, 170, 40, 100, 2, 1);
     btprnt_draw_thickline(&r, 10, 170, 90, 150, 4, 1);
 
+    btprnt_draw_roundrect(&r, 120, 100, 44, 44, 4, 1);
+    btprnt_draw_roundrect_filled(&r, 131, 111, 22, 22, 4, 1);
+
     btprnt_buf_pbm(btprnt_buf_get(bp), "out.pbm");
 
     btprnt_del(&bp);
