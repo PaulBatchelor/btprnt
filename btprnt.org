@@ -199,7 +199,8 @@ btprnt_buf * btprnt_buf_init(int w, int h)
     b->h = h;
 
     if (w % 8) {
-        stride = ((w / 8) + 1) * 8;
+        /* stride = ((w / 8) + 1) * 8; */
+        stride = ((w / 8) + 1);
     } else {
         stride = w / 8;
     }
