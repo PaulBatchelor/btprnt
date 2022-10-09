@@ -282,16 +282,16 @@ and =btprnt_buf_write=.
 unsigned char btprnt_buf_read(btprnt_buf *b, int x, int y);
 void btprnt_buf_write(btprnt_buf *b, int x, int y, int c);
 #+END_SRC
-Reading bit is a matter of first finding the byte where it
-is located, and then ANDing with the local bit location.
+Reading a bit is a matter of first finding the byte where
+it is located, and then ANDing with the local bit location.
 
-Multiplying the stride by the height gives us which to look
-at. Adding x divided by 8 (bits to a byte), gives us the
-byte offset.
+Multiplying the stride by the height gives us which row
+to look at. Adding x divided by 8 (bits to a byte),
+gives us the byte offset.
 
-No coordinate checks done here so be careful. This isn't
-an interface to be accessed directly. Sanitized inputs are
-expected to be here.
+No coordinate checks are done here so be careful. This isn't
+an interface to be accessed directly. Sanitized inputs with
+boundary checks before running this function.
 
 #+NAME: funcs
 #+BEGIN_SRC c
@@ -795,6 +795,28 @@ The static function =draw_tile= will draw the tile using
 a specified =draw= callback, to allow for regular or
 wraparound drawing.
 
+=reg= refers to the btprnt region to draw onto.
+
+=map= is a buffer that contains the tilemap as a bitmap.
+
+=xpos= and =ypos= indicate where to draw the tile on the
+region. The coordinates point to the top-left corner of
+the tile.
+
+=mx= and =my= are coordinates for the tile. The position
+(1, 2) would indicate the tile on the second row
+(offset 1), on the third column (offset 2).
+
+=w= and =h= indicate the width and height dimensions of
+the tile (in pixels).
+
+=scale= is a scaling factor. 1 is regular, 2 is 2x, 3 is
+3x, etc.
+
+=color= is the color of the glyph. 1 is the 'on'
+color (usually black), and 0 is 'off' color (usually white).
+
+
 #+NAME: static_funcdefs
 #+BEGIN_SRC c
 static void draw_tile(btprnt_region *reg,
@@ -805,6 +827,14 @@ static void draw_tile(btprnt_region *reg,
                       int scale, int color,
                       void (*draw)(btprnt_region*,int,int,int));
 #+END_SRC
+
+The =draw_tile= function uses =btprnt_buf_read= to read
+bits from the tilemap. Things like stride are abstracted
+away there, which makes this aspect of the function a little
+more straight forward.
+
+Scaling is something that is handled here, which requires
+an additional nested loop, and some extra variables.
 
 #+NAME: funcs
 #+BEGIN_SRC c
