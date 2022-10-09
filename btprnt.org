@@ -180,8 +180,15 @@ The buffer is allocated + initialized with the function
 btprnt_buf * btprnt_buf_init(int w, int h);
 #+END_SRC
 
-To make the math a bit easier, the rows will be rounded to
-the nearest multiple of 8.
+To make the math a bit easier for read/write operations,
+the rows will be rounded to the nearest multiple of 8,
+so they can be aligned with byte boundaries. For
+non-multiples of 8, this will produce padding, or
+extra unused bits at the end of the row.
+
+The size of each row in bytes is stored in a variable
+called =stride=. The stride value gets used any time a read
+or write operation is computed.
 
 #+NAME: funcs
 #+BEGIN_SRC c
@@ -199,7 +206,6 @@ btprnt_buf * btprnt_buf_init(int w, int h)
     b->h = h;
 
     if (w % 8) {
-        /* stride = ((w / 8) + 1) * 8; */
         stride = ((w / 8) + 1);
     } else {
         stride = w / 8;
