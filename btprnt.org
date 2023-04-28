@@ -374,7 +374,12 @@ void btprnt_buf_pbm(btprnt_buf *buf, const char *filename)
     FILE *fp;
     int x, y;
     int count;
-    fp = fopen(filename, "w");
+
+    if (filename == NULL) {
+        fp = stdout;
+    } else {
+        fp = fopen(filename, "w");
+    }
 
     if (buf == NULL || fp == NULL) return;
 
